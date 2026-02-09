@@ -1,0 +1,24 @@
+{{define "subject"}}Welcome to {{.APP}}!{{end}}
+
+{{define "plainBody"}}
+Hi,
+Thanks for signing up for a {{.APP}} account. We're excited to have you on board!
+Thanks,
+The {{.APP}} Team
+{{end}}
+
+{{define "htmlBody"}}
+<!doctype html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width" />
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+<body>
+<p>Hi,</p>
+<p>Thanks for signing up for a {{.APP}} account. We're excited to have you on board!</p>
+<p>Thanks,</p>
+<p>The {{.APP}} Team</p>
+</body>
+</html>
+{{end}}
