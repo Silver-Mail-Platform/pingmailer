@@ -1,0 +1,23 @@
+# ===============================================================
+#          Silver Mail Server Configuration (`silver.yaml`)
+# ===============================================================
+#
+# This file contains the primary configuration for your mail server.
+# --- Domain Configuration ---
+# You can configure multiple domains for your mail server.
+#
+# ➡ IMPORTANT:
+#   - Replace the empty values below with your actual domain names.
+#   - Do NOT include 'www.' or 'https://'. Just the domain itself.
+#   - These domains must be real, registered domains that you own.
+#
+# Example configuration:
+# domains:
+#   - domain: example.com
+#     dkim-selector: mail
+#     dkim-key-size: 2048
+
+domains:
+  - domain:
+    dkim-selector:
+    dkim-key-size:

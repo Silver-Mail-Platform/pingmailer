@@ -1,0 +1,119 @@
+services:
+  smtp-server:
+    image: ghcr.io/lsflk/silver-smtp:main
+    container_name: smtp-server-container
+    ports:
+      - "25:25"
+      - "587:587"
+    volumes:
+      - ./silver-config/postfix/main.cf:/etc/postfix/main.cf:ro
+      - ./silver-config/postfix/master.cf:/etc/postfix/master.cf:ro
+      - ./silver-config/postfix/recipient_access:/etc/postfix/recipient_access:ro
+      - ../conf/silver.yaml:/etc/postfix/silver.yaml
+      - ./silver-config/certbot/keys/etc:/etc/letsencrypt:ro
+      - ./silver-config/raven/data:/app/data:rw
+      - postfix-spool:/var/spool/postfix
+      - postfix-logs:/var/log
+    networks:
+      - mail-network
+    depends_on:
+      - opendkim-server
+      - certbot-server
+      - raven-server
+
+  raven-server:
+    image: ghcr.io/lsflk/raven:latest
+    container_name: raven
+    ports:
+      - "143:143"
+      - "993:993"
+      - "24:24"
+      - "12345:12345"
+    volumes:
+      - ./silver-config/raven/conf:/etc/raven:rw
+      - ./silver-config/raven/data:/app/data:rw
+      - ./silver-config/raven/certs:/certs:ro
+    environment:
+      - DB_FILE=/app/data/databases/shared.db
+    networks:
+      - mail-network
+    restart: unless-stopped
+    user: "0:0"
+
+  opendkim-server:
+    image: ghcr.io/lsflk/silver-dkim:main
+    container_name: opendkim-server
+    volumes:
+      - ../conf/silver.yaml:/etc/opendkim/silver.yaml
+      - ./silver-config/opendkim/opendkim.conf:/etc/opendkim/opendkim.conf:ro
+      - ./silver-config/opendkim/KeyTable:/etc/opendkim/KeyTable:ro
+      - ./silver-config/opendkim/SigningTable:/etc/opendkim/SigningTable:ro
+      - ./silver-config/opendkim/TrustedHosts:/etc/opendkim/TrustedHosts:ro
+      - dkim-keys:/etc/dkimkeys
+    networks:
+      - mail-network
+    cap_drop:
+      - all
+    security_opt:
+      - no-new-privileges:true
+
+  # Initialize database from the image
+  thunder-db-init:
+    image: ghcr.io/asgardeo/thunder:0.14.0
+    container_name: thunder-db-init
+    command: sh -c "cp -r /opt/thunder/repository/database/* /data/"
+    volumes:
+      - thunder-db:/data
+    restart: "no"
+
+  # Run setup once with the shared database
+  thunder-setup:
+    image: ghcr.io/asgardeo/thunder:0.14.0
+    container_name: thunder-setup
+    command: ./setup.sh
+    volumes:
+      - thunder-db:/opt/thunder/repository/database
+    depends_on:
+      thunder-db-init:
+        condition: service_completed_successfully
+    restart: "no"
+
+  # Run Thunder server with the shared database
+  thunder:
+    image: ghcr.io/asgardeo/thunder:0.14.0
+    container_name: thunder-server
+    depends_on:
+      thunder-setup:
+        condition: service_completed_successfully
+    ports:
+      - "127.0.0.1:8090:8090"
+    volumes:
+      - thunder-db:/opt/thunder/repository/database
+      - ./silver-config/thunder/certs/server.cert:/opt/thunder/repository/resources/security/server.cert:ro
+      - ./silver-config/thunder/certs/server.key:/opt/thunder/repository/resources/security/server.key:ro
+    networks:
+      - mail-network
+    restart: unless-stopped
+
+  certbot-server:
+    image: ghcr.io/lsflk/silver-certbot:main
+    container_name: certbot-server
+    volumes:
+      - ./silver-config/certbot/keys/etc:/etc/letsencrypt
+      - ./silver-config/certbot/keys/log:/var/log/letsencrypt
+      - ./silver-config/certbot/keys/lib:/var/lib/letsencrypt"
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - mail-network
+
+volumes:
+  postfix-spool:
+  postfix-logs:
+  dkim-keys:
+  thunder-db:
+
+
+networks:
+  mail-network:
