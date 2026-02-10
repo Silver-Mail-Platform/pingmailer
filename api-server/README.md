@@ -1,4 +1,4 @@
-# outgoing-email-example
+# PingMailer API
 
 A generic Go API service for sending emails via SMTP. This service allows clients to send emails by providing their own SMTP configuration, recipient details, and optional custom email templates through a RESTful API.
 
