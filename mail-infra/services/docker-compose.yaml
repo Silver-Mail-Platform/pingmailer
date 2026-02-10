@@ -11,7 +11,6 @@ services:
       - ./silver-config/postfix/recipient_access:/etc/postfix/recipient_access:ro
       - ../conf/silver.yaml:/etc/postfix/silver.yaml
       - ./silver-config/certbot/keys/etc:/etc/letsencrypt:ro
-      - ./silver-config/raven/data:/app/data:rw
       - postfix-spool:/var/spool/postfix
       - postfix-logs:/var/log
     networks:
@@ -19,20 +18,17 @@ services:
     depends_on:
       - opendkim-server
       - certbot-server
-      - raven-server
+      - raven-sasl-server
 
-  raven-server:
-    image: ghcr.io/lsflk/raven:latest
-    container_name: raven
+  raven-sasl-server:
+    image: ghcr.io/lsflk/raven-sasl:latest
+    container_name: raven-sasl
     ports:
-      - "143:143"
-      - "993:993"
-      - "24:24"
       - "12345:12345"
     volumes:
       - ./silver-config/raven/conf:/etc/raven:rw
-      - ./silver-config/raven/data:/app/data:rw
       - ./silver-config/raven/certs:/certs:ro
+      - postfix-spool:/var/spool/postfix
     environment:
       - DB_FILE=/app/data/databases/shared.db
     networks:
