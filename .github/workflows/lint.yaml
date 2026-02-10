@@ -1,4 +1,4 @@
-name: golangci-lint Pipeline
+name: Go CI
 
 on:
         push:
@@ -13,27 +13,48 @@ permissions:
 
 jobs:
         golangci:
-                name: lint
+                name: GolangCI-Lint
                 runs-on: ubuntu-latest
+
                 steps:
-                        - uses: actions/checkout@v5
-                        - uses: actions/setup-go@v6
+                        - name: Checkout source
+                          uses: actions/checkout@v5
+
+                        - name: Set up Go
+                          uses: actions/setup-go@v6
                           with:
                                   go-version: stable
-                        - name: golangci-lint
+
+                        - name: Download dependencies
+                          run: go mod download
+                          working-directory: api-server
+
+                        - name: Run golangci-lint
                           uses: golangci/golangci-lint-action@v8
                           with:
                                   version: v2.6.2
+                                  working-directory: api-server
 
         security_scan:
-                name: Security Scan
+                name: Gosec Security Scan
                 runs-on: ubuntu-latest
-                env:
-                        GO111MODULE: on
+
                 steps:
-                        - name: Checkout Source
-                          uses: actions/checkout@v3
-                        - name: Run Gosec Security Scanner
-                          uses: securego/gosec@master
+                        - name: Checkout source
+                          uses: actions/checkout@v5
+
+                        - name: Set up Go
+                          uses: actions/setup-go@v6
                           with:
-                                  args: ./...
+                                  go-version: stable
+
+                        - name: Download dependencies
+                          run: go mod download
+                          working-directory: api-server
+
+                        - name: Install gosec
+                          run: go install github.com/securego/gosec/v2/cmd/gosec@latest
+
+                        - name: Run gosec
+                          run: gosec ./...
+                          working-directory: api-server
