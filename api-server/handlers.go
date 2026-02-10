@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"net/mail"
 
@@ -15,16 +16,16 @@ type user struct {
 }
 
 type notifyRequest struct {
-	SMTPHost       string                 `json:"smtp_host"`
-	SMTPPort       int                    `json:"smtp_port"`
-	SMTPUsername   string                 `json:"smtp_username"`
-	SMTPPassword   string                 `json:"smtp_password"`
-	SMTPSender     string                 `json:"smtp_sender"`
-	RecipientName  string                 `json:"recipient_name"`
-	RecipientEmail string                 `json:"recipient_email"`
-	AppName        string                 `json:"app_name"`
-	Template       string                 `json:"template,omitempty"`        // Optional: custom template content
-	TemplateData   map[string]interface{} `json:"template_data,omitempty"`   // Optional: custom template data
+	SMTPHost       string         `json:"smtp_host"`
+	SMTPPort       int            `json:"smtp_port"`
+	SMTPUsername   string         `json:"smtp_username"`
+	SMTPPassword   string         `json:"smtp_password"`
+	SMTPSender     string         `json:"smtp_sender"`
+	RecipientName  string         `json:"recipient_name"`
+	RecipientEmail string         `json:"recipient_email"`
+	AppName        string         `json:"app_name"`
+	Template       string         `json:"template,omitempty"`      // Optional: custom template content
+	TemplateData   map[string]any `json:"template_data,omitempty"` // Optional: custom template data
 }
 
 func (app *application) handleNotify(w http.ResponseWriter, r *http.Request) {
@@ -103,7 +104,7 @@ func (app *application) handleNotify(w http.ResponseWriter, r *http.Request) {
 				APP:   req.AppName,
 			}
 		}
-		
+
 		err = mailer.SendWithCustomTemplate(req.RecipientEmail, req.Template, templateData)
 	} else {
 		// Use default welcome template
@@ -114,7 +115,7 @@ func (app *application) handleNotify(w http.ResponseWriter, r *http.Request) {
 		}
 		err = mailer.Send(usr.Email, "welcome.tmpl", usr)
 	}
-	
+
 	if err != nil {
 		app.logger.Error("failed to send email", "error", err)
 		http.Error(w, "Failed to send email", http.StatusInternalServerError)
@@ -122,5 +123,9 @@ func (app *application) handleNotify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Email sent successfully"))
+	_, err = w.Write([]byte("Email sent successfully"))
+
+	if err != nil {
+		log.Println("Error in handleNotify, error in writing header.")
+	}
 }

@@ -48,3 +48,5 @@ docker-compose-down:
 
 docker-logs:
 	docker logs -f pingmailer-api
+gci:
+	golangci-lint run

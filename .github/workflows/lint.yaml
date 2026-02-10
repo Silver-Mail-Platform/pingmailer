@@ -1,0 +1,60 @@
+name: Go CI
+
+on:
+        push:
+                branches:
+                        - main
+        pull_request:
+
+permissions:
+        contents: read
+        pull-requests: read
+        security-events: write
+
+jobs:
+        golangci:
+                name: GolangCI-Lint
+                runs-on: ubuntu-latest
+
+                steps:
+                        - name: Checkout source
+                          uses: actions/checkout@v5
+
+                        - name: Set up Go
+                          uses: actions/setup-go@v6
+                          with:
+                                  go-version: stable
+
+                        - name: Download dependencies
+                          run: go mod download
+                          working-directory: api-server
+
+                        - name: Run golangci-lint
+                          uses: golangci/golangci-lint-action@v8
+                          with:
+                                  version: v2.6.2
+                                  working-directory: api-server
+
+        security_scan:
+                name: Gosec Security Scan
+                runs-on: ubuntu-latest
+
+                steps:
+                        - name: Checkout source
+                          uses: actions/checkout@v5
+
+                        - name: Set up Go
+                          uses: actions/setup-go@v6
+                          with:
+                                  go-version: stable
+
+                        - name: Download dependencies
+                          run: go mod download
+                          working-directory: api-server
+
+                        - name: Install gosec
+                          run: go install github.com/securego/gosec/v2/cmd/gosec@latest
+
+                        - name: Run gosec
+                          run: gosec ./...
+                          working-directory: api-server
