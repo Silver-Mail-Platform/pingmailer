@@ -1,9 +1,12 @@
 # Multi-stage build for optimal image size
 # Stage 1: Build the Go application
-FROM golang:1.23-alpine AS builder
+FROM golang:alpine AS builder
 
 # Install build dependencies
 RUN apk add --no-cache git ca-certificates tzdata
+
+# Set GOTOOLCHAIN to auto to allow newer go versions
+ENV GOTOOLCHAIN=auto
 
 # Set working directory
 WORKDIR /build
