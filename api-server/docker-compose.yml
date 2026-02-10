@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   api-server:
     build:
@@ -19,12 +17,13 @@ services:
     # For HTTPS mode, uncomment and configure the following
     # environment:
     #   - PORT=8443
-    #   - CERT_FILE=/certs/fullchain.pem
-    #   - KEY_FILE=/certs/privkey.pem
+    #   - CERT_FILE=/certs/live/yourdomain.com/fullchain.pem
+    #   - KEY_FILE=/certs/live/yourdomain.com/privkey.pem
     
-    # Mount certificates for HTTPS (uncomment for HTTPS mode)
+    # Mount entire certbot etc directory for HTTPS (uncomment for HTTPS mode)
+    # This preserves symlinks properly
     # volumes:
-    #   - ../mail-infra/services/silver-config/certbot/keys/etc/live/yourdomain.com:/certs:ro
+    #   - ../mail-infra/services/silver-config/certbot/keys/etc:/certs:ro
     
     # Optional: Join the mail network if integrating with other mail services
     # networks:

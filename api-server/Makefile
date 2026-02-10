@@ -23,9 +23,10 @@ docker-run-https:
 	docker run -d \
 		-p 8443:8443 \
 		-e PORT=8443 \
-		-e CERT_FILE=/certs/fullchain.pem \
-		-e KEY_FILE=/certs/privkey.pem \
-		-v $(PWD)/../mail-infra/services/silver-config/certbot/keys/etc/live/yourdomain.com:/certs:ro \
+		-e CERT_FILE=/certs/live/yourdomain.co/fullchain.pem \
+		-e KEY_FILE=/certs/live/yourdomain.co/privkey.pem \
+		-v $(PWD)/../mail-infra/services/silver-config/certbot/keys/etc:/certs:ro \
+		--network mail-network \
 		--name pingmailer-api \
 		pingmailer-api
 
