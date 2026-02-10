@@ -12,7 +12,9 @@ A generic Go API service for sending emails via SMTP. This service allows client
 
 ## Running the Server
 
-Start the server with:
+### HTTP Mode (Development)
+
+Start the server in HTTP mode with:
 
 ```sh
 make
@@ -30,13 +32,58 @@ By default, the server runs on port 8080. You can change this with the `-port` f
 go run . -port 3000
 ```
 
+### HTTPS Mode (Production)
+
+To run the server with HTTPS using TLS certificates from Let's Encrypt (certbot):
+
+```sh
+make run-https
+```
+
+Or manually with custom certificate paths:
+
+```sh
+go run . -port 8443 \
+  -cert /path/to/fullchain.pem \
+  -key /path/to/privkey.pem
+```
+
+Or using the provided startup script:
+
+```sh
+# Set your domain name and run
+DOMAIN=yourdomain.com ./run-https.sh
+
+# Or export the domain and port as environment variables
+export DOMAIN=yourdomain.com
+export PORT=8443
+./run-https.sh
+```
+
+For the mail infrastructure setup, certificates are typically located at:
+```
+../mail-infra/services/silver-config/certbot/keys/etc/live/yourdomain.com/
+```
+
+Replace `yourdomain.com` with your actual domain name.
+
+**Note:** Make sure to update the Makefile or set the DOMAIN environment variable with your actual domain name before running in HTTPS mode.
+
 ## API Usage
 
 ### Endpoint
 
+**HTTP (Development):**
 ```
-POST /notify
+POST http://localhost:8080/notify
 ```
+
+**HTTPS (Production):**
+```
+POST https://yourdomain.com:8443/notify
+```
+
+Replace `yourdomain.com` and port number with your actual domain and configured port.
 
 ### Request Body
 
