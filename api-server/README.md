@@ -4,21 +4,13 @@ A generic Go API service for sending emails via SMTP. This service allows client
 
 ## Features
 
-- ✉️ Send emails via any SMTP server
-- 🔧 Fully configurable via API requests (no hardcoded credentials)
-- 📝 Support for custom email templates
-- 🎨 HTML and plain text email formats
-- 🚀 Stateless design - perfect for microservices
+- Send emails via any SMTP server
+- Fully configurable via API requests (no hardcoded credentials)
+- Support for custom email templates
+- HTML and plain text email formats
+- Stateless design
 
 ## Running the Server
-
-Start the server with:
-
-```sh
-make
-```
-
-Or manually:
 
 ```sh
 go run .
@@ -27,7 +19,13 @@ go run .
 By default, the server runs on port 8080. You can change this with the `-port` flag:
 
 ```sh
-go run . -port 3000
+go run . -port 3000 # omit -port 3000 to run as default
+```
+
+Alternatively you can build from source with: 
+
+```sh
+make
 ```
 
 ## API Usage
@@ -196,4 +194,3 @@ The {{.APP}} Team
 - For production use with many templates, consider storing them in a database
 - The SMTP connection timeout is set to 2 seconds
 - Both HTML and plain text versions are sent (multipart email)
-
