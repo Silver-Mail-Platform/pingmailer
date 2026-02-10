@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  api-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pingmailer-api-server
+    restart: unless-stopped
+    
+    # HTTP mode (development)
+    ports:
+      - "8080:8080"
+    
+    # For HTTPS mode, uncomment the following and comment out the HTTP port above
+    # ports:
+    #   - "8443:8443"
+    
+    # For HTTPS mode, uncomment and configure the following
+    # environment:
+    #   - PORT=8443
+    #   - CERT_FILE=/certs/fullchain.pem
+    #   - KEY_FILE=/certs/privkey.pem
+    
+    # Mount certificates for HTTPS (uncomment for HTTPS mode)
+    # volumes:
+    #   - ../mail-infra/services/silver-config/certbot/keys/etc/live/yourdomain.com:/certs:ro
+    
+    # Optional: Join the mail network if integrating with other mail services
+    # networks:
+    #   - mail-network
+
+# Uncomment if using the mail network
+# networks:
+#   mail-network:
+#     external: true

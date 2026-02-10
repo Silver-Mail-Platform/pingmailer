@@ -9,10 +9,24 @@ A generic Go API service for sending emails via SMTP. This service allows client
 - 📝 Support for custom email templates
 - 🎨 HTML and plain text email formats
 - 🚀 Stateless design - perfect for microservices
+- 🔒 HTTPS/TLS support with Let's Encrypt certificates
+- 🐳 Docker support for easy deployment
+
+## Quick Links
+
+- [Docker Deployment Guide](DOCKER.md) - Complete Docker deployment instructions
+- [API Documentation](#api-usage) - API endpoint details
 
 ## Running the Server
 
-### HTTP Mode (Development)
+You can run the server in three ways:
+1. **Directly with Go** (for development)
+2. **With Docker** (recommended for production)
+3. **With Docker Compose** (easiest for production)
+
+### Method 1: Direct Go Execution
+
+#### HTTP Mode (Development)
 
 Start the server in HTTP mode with:
 
@@ -68,6 +82,75 @@ For the mail infrastructure setup, certificates are typically located at:
 Replace `yourdomain.com` with your actual domain name.
 
 **Note:** Make sure to update the Makefile or set the DOMAIN environment variable with your actual domain name before running in HTTPS mode.
+
+### Method 2: Docker
+
+#### Build Docker Image
+
+```sh
+make docker-build
+# or
+docker build -t pingmailer-api .
+```
+
+#### Run with Docker (HTTP)
+
+```sh
+make docker-run
+# or
+docker run -d -p 8080:8080 --name pingmailer-api pingmailer-api
+```
+
+#### Run with Docker (HTTPS)
+
+```sh
+# Update yourdomain.com with your actual domain in the Makefile first
+make docker-run-https
+
+# Or manually
+docker run -d \
+  -p 8443:8443 \
+  -e PORT=8443 \
+  -e CERT_FILE=/certs/fullchain.pem \
+  -e KEY_FILE=/certs/privkey.pem \
+  -v $(pwd)/../mail-infra/services/silver-config/certbot/keys/etc/live/aravindahwk.org:/certs:ro \
+  --name pingmailer-api \
+  pingmailer-api
+```
+
+### Method 3: Docker Compose (Recommended for Production)
+
+#### HTTP Mode
+
+```sh
+docker-compose up -d
+```
+
+#### HTTPS Mode
+
+```sh
+# 1. Update domain in docker-compose.https.yml
+sed -i 's/yourdomain.com/aravindahwk.org/g' docker-compose.https.yml
+
+# 2. Create network if needed
+docker network create mail-network
+
+# 3. Start the service
+docker-compose -f docker-compose.https.yml up -d
+
+# Or use make
+make docker-compose-https
+```
+
+#### View Logs
+
+```sh
+docker-compose logs -f
+# or
+make docker-logs
+```
+
+For complete Docker documentation, see [DOCKER.md](DOCKER.md).
 
 ## API Usage
 
