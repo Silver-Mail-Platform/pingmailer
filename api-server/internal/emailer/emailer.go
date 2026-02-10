@@ -42,7 +42,7 @@ func (m Mailer) Send(recipient, templateFile string, data any) error {
 	return m.send(recipient, tmpl, data)
 }
 
-// SendWithCustomTemplate renders a custom template string with the provided data 
+// SendWithCustomTemplate renders a custom template string with the provided data
 // and delivers the email to the recipient. The template must define "subject",
 // "plainBody", and "htmlBody" blocks.
 func (m Mailer) SendWithCustomTemplate(recipient, templateContent string, data any) error {
@@ -81,9 +81,14 @@ func (m Mailer) send(recipient string, tmpl *template.Template, data any) error 
 	msg.SetBody("text/plain", plainBody.String())
 	msg.AddAlternative("text/html", htmlBody.String())
 
-	err = m.dialer.DialAndSend(msg)
-	if err != nil {
-		return err
+	for i := 1; i <= 3; i++ {
+		err = m.dialer.DialAndSend(msg)
+		// If everything worked, return nil.
+		if nil == err {
+			return nil
+		}
+		// If it didn't work, sleep for a short time and retry.
+		time.Sleep(500 * time.Millisecond)
 	}
-	return nil
+	return err
 }
