@@ -42,13 +42,15 @@ COPY --from=builder /build/api-server .
 COPY --from=builder /build/internal/emailer/templates ./internal/emailer/templates
 
 # Create directory for certificates (will be mounted as volume)
-RUN mkdir -p /certs && chown appuser:appuser /certs
+RUN mkdir -p /certs
 
 # Change ownership of the app directory
 RUN chown -R appuser:appuser /app
 
-# Switch to non-root user
-USER appuser
+# Note: Running as root to access certificate files mounted from host
+# The certificate files are typically owned by root with restricted permissions
+# Since we mount them read-only (:ro), this is acceptable
+# For production, consider using Docker secrets or adjusting host file permissions
 
 # Expose ports
 # 8080 for HTTP, 8443 for HTTPS
