@@ -8,3 +8,6 @@ build:
 
 clean:
 	rm -rf bin
+
+gci:
+	golangci-lint run
