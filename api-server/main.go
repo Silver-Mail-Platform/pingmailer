@@ -24,6 +24,7 @@ type config struct {
 func main() {
 	var cfg config
 	flag.IntVar(&cfg.port, "port", 8080, "API server port")
+	flag.StringVar(&cfg.version, "version", "0.1.0", "Version")
 	flag.StringVar(&cfg.certFile, "cert", "", "Path to TLS certificate file (e.g., /path/to/fullchain.pem)")
 	flag.StringVar(&cfg.keyFile, "key", "", "Path to TLS key file (e.g., /path/to/privkey.pem)")
 

@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"net/mail"
 
@@ -35,97 +34,102 @@ func (app *application) handleNotify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req notifyRequest
-	err := json.NewDecoder(r.Body).Decode(&req)
+	req, err := decodeNotifyRequest(r)
 	if err != nil {
 		app.logger.Error("failed to decode request body", "error", err)
 		http.Error(w, "Invalid request body: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	// Validate required fields with specific error messages
-	if req.SMTPHost == "" {
-		http.Error(w, "Missing required field: smtp_host", http.StatusBadRequest)
+	if !validateNotifyRequest(w, req) {
 		return
 	}
-	if req.SMTPPort == 0 {
-		http.Error(w, "Missing required field: smtp_port", http.StatusBadRequest)
-		return
+	applyNotifyDefaults(&req)
+
+	// Create a new mailer instance with the provided SMTP configuration
+	mailer := emailer.NewMailer(req.SMTPHost, req.SMTPPort, req.SMTPUsername, req.SMTPPassword, req.SMTPSender)
+
+	defaultUser := buildDefaultUser(req)
+
+	go func(req notifyRequest, defaultUser user, mailer emailer.Mailer) {
+		if err := sendNotifyEmail(mailer, req, defaultUser); err != nil {
+			app.logger.Error("failed to send email", "error", err)
+		}
+	}(req, defaultUser, mailer)
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func decodeNotifyRequest(r *http.Request) (notifyRequest, error) {
+	var req notifyRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	return req, err
+}
+
+func validateNotifyRequest(w http.ResponseWriter, req notifyRequest) bool {
+	required := func(ok bool, message string) bool {
+		if ok {
+			return true
+		}
+		http.Error(w, message, http.StatusBadRequest)
+		return false
 	}
-	if req.SMTPUsername == "" {
-		http.Error(w, "Missing required field: smtp_username", http.StatusBadRequest)
-		return
+	if !required(req.SMTPHost != "", "Missing required field: smtp_host") {
+		return false
 	}
-	if req.SMTPPassword == "" {
-		http.Error(w, "Missing required field: smtp_password", http.StatusBadRequest)
-		return
+	if !required(req.SMTPPort != 0, "Missing required field: smtp_port") {
+		return false
 	}
-	if req.SMTPSender == "" {
-		http.Error(w, "Missing required field: smtp_sender", http.StatusBadRequest)
-		return
+	if !required(req.SMTPUsername != "", "Missing required field: smtp_username") {
+		return false
 	}
-	if req.RecipientEmail == "" {
-		http.Error(w, "Missing required field: recipient_email", http.StatusBadRequest)
-		return
+	if !required(req.SMTPPassword != "", "Missing required field: smtp_password") {
+		return false
+	}
+	if !required(req.SMTPSender != "", "Missing required field: smtp_sender") {
+		return false
+	}
+	if !required(req.RecipientEmail != "", "Missing required field: recipient_email") {
+		return false
 	}
 
-	// Validate email formats
 	if _, err := mail.ParseAddress(req.SMTPSender); err != nil {
 		http.Error(w, "Invalid smtp_sender email format: "+err.Error(), http.StatusBadRequest)
-		return
+		return false
 	}
 	if _, err := mail.ParseAddress(req.RecipientEmail); err != nil {
 		http.Error(w, "Invalid recipient_email format: "+err.Error(), http.StatusBadRequest)
-		return
+		return false
 	}
 
-	// Set default values if not provided
+	return true
+}
+
+func applyNotifyDefaults(req *notifyRequest) {
 	if req.RecipientName == "" {
 		req.RecipientName = "User"
 	}
 	if req.AppName == "" {
 		req.AppName = "Application"
 	}
+}
 
-	// Create a new mailer instance with the provided SMTP configuration
-	mailer := emailer.NewMailer(req.SMTPHost, req.SMTPPort, req.SMTPUsername, req.SMTPPassword, req.SMTPSender)
+func buildDefaultUser(req notifyRequest) user {
+	return user{
+		Name:  req.RecipientName,
+		Email: req.RecipientEmail,
+		APP:   req.AppName,
+	}
+}
 
-	// Use custom template if provided, otherwise use default template data
-	if req.Template != "" {
-		// If custom template is provided, use template_data if available, otherwise use default user data
-		var templateData interface{}
-		if len(req.TemplateData) > 0 {
-			templateData = req.TemplateData
-		} else {
-			// Fallback to default user struct
-			templateData = user{
-				Name:  req.RecipientName,
-				Email: req.RecipientEmail,
-				APP:   req.AppName,
-			}
-		}
-
-		err = mailer.SendWithCustomTemplate(req.RecipientEmail, req.Template, templateData)
-	} else {
-		// Use default welcome template
-		var usr = user{
-			Name:  req.RecipientName,
-			Email: req.RecipientEmail,
-			APP:   req.AppName,
-		}
-		err = mailer.Send(usr.Email, "welcome.tmpl", usr)
+func sendNotifyEmail(mailer emailer.Mailer, req notifyRequest, defaultUser user) error {
+	if req.Template == "" {
+		return mailer.Send(defaultUser.Email, "welcome.tmpl", defaultUser)
 	}
 
-	if err != nil {
-		app.logger.Error("failed to send email", "error", err)
-		http.Error(w, "Failed to send email", http.StatusInternalServerError)
-		return
+	templateData := any(defaultUser)
+	if len(req.TemplateData) > 0 {
+		templateData = req.TemplateData
 	}
-
-	w.WriteHeader(http.StatusOK)
-	_, err = w.Write([]byte("Email sent successfully"))
-
-	if err != nil {
-		log.Println("Error in handleNotify, error in writing header.")
-	}
+	return mailer.SendWithCustomTemplate(req.RecipientEmail, req.Template, templateData)
 }
