@@ -7,7 +7,14 @@ A simple REST API service for sending emails via SMTP. Part of the Silver Mail P
 ### Deploy with Docker Compose (Recommended)
 
 ```bash
-# Update domain name in docker-compose.https.yml if needed
+# 1. Configure your environment
+cp .env.example .env
+
+# 2. Edit .env and update these values:
+#    - DOMAIN: your actual domain name
+#    - CERT_PATH: path to your SSL certificates
+
+# 3. Start the service
 docker compose -f docker-compose.https.yml up -d
 
 # View logs
