@@ -18,8 +18,9 @@ README.md
 DEPLOYMENT.md
 *.md
 
-# Scripts
+# Scripts (but allow entrypoint.sh)
 *.sh
+!entrypoint.sh
 
 # IDE
 .vscode/
