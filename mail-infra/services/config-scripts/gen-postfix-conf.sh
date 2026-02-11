@@ -103,7 +103,7 @@ maillog_file = /var/log/mail.log
 
 # SASL authentication provided by Raven server via Unix socket
 smtpd_sasl_type = dovecot
-smtpd_sasl_path = inet:raven:12345
+smtpd_sasl_path = inet:raven-sasl:12345
 smtpd_sasl_auth_enable = yes
 smtpd_sasl_security_options = noanonymous
 broken_sasl_auth_clients = yes

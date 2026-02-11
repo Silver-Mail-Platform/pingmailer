@@ -1,6 +1,6 @@
 module github.com/Silver-Mail-Platform/pingmailer
 
-go 1.25.6
+go 1.23
 
 require github.com/go-mail/mail/v2 v2.3.0
 
