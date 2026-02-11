@@ -1,4 +1,4 @@
-module github.com/maneeshaxyz/outgoing-email-example
+module github.com/Silver-Mail-Platform/pingmailer
 
 go 1.25.6
 
