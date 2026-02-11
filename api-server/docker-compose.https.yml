@@ -12,13 +12,13 @@ services:
     
     environment:
       - PORT=8443
-      - CERT_FILE=/certs/live/yourdomain.co/fullchain.pem
-      - KEY_FILE=/certs/live/yourdomain.co/privkey.pem
+      - CERT_FILE=/certs/live/${DOMAIN}/fullchain.pem
+      - KEY_FILE=/certs/live/${DOMAIN}/privkey.pem
     
     # Mount entire certbot etc directory to preserve symlinks
     # This allows Docker to follow the symlinks to the archive directory
     volumes:
-      - ../mail-infra/services/silver-config/certbot/keys/etc:/certs:ro
+      - ${CERT_PATH}:/certs:ro
     
     # Join the mail network to integrate with mail services
     networks:
