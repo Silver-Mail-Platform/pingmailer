@@ -82,13 +82,18 @@ func (m Mailer) send(recipient string, tmpl *template.Template, data any) error 
 	msg.AddAlternative("text/html", htmlBody.String())
 
 	// retry sending mail logic
-	for i := 1; i <= 3; i++ {
+	const maxRetries = 3
+	const retrySleep = 500 * time.Millisecond
+
+	for i := range maxRetries {
 		err = m.dialer.DialAndSend(msg)
-		if nil == err {
+		if err == nil {
 			return nil
 		}
-		// If it didn't work, sleep for a short time and retry.
-		time.Sleep(500 * time.Millisecond)
+
+		if i < maxRetries-1 {
+			time.Sleep(retrySleep)
+		}
 	}
 	return err
 }
