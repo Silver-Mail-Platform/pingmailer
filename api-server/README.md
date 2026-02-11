@@ -58,3 +58,114 @@ curl -X POST https://your-domain:8443/notify \
 | `app_name` | string | "Application" | Application name for email template |
 | `template` | string | - | Custom email template |
 | `template_data` | object | - | Data for custom template |
+
+## Custom Templates
+
+You can use custom email templates by providing the `template` and `template_data` fields.
+
+### Template Format
+
+Templates use Go's `text/template` syntax with three parts:
+
+```go
+{{define "subject"}}Your Subject Here{{end}}
+
+{{define "plainBody"}}
+Plain text version of your email
+{{end}}
+
+{{define "htmlBody"}}
+<!doctype html>
+<html>
+<body>
+HTML version of your email
+</body>
+</html>
+{{end}}
+```
+
+### Template Variables
+
+Access custom data in your template using `{{.FieldName}}`:
+
+```bash
+curl -X POST https://your-domain:8443/notify \
+  -H "Content-Type: application/json" \
+  -d '{
+    "smtp_host": "smtp-server",
+    "smtp_port": 587,
+    "smtp_username": "user@domain.com",
+    "smtp_password": "password",
+    "smtp_sender": "noreply@domain.com",
+    "recipient_email": "user@example.com",
+    "template": "{{define \"subject\"}}Password Reset{{end}}{{define \"plainBody\"}}Hi {{.Name}}, your code is {{.Code}}{{end}}{{define \"htmlBody\"}}<p>Hi {{.Name}}, your code is <strong>{{.Code}}</strong></p>{{end}}",
+    "template_data": {
+      "Name": "John",
+      "Code": "123456"
+    }
+  }'
+```
+
+## API Responses
+
+### Success Response
+
+**Status:** `200 OK`
+
+```json
+{
+  "message": "Email sent successfully"
+}
+```
+
+### Error Responses
+
+**Status:** `400 Bad Request` - Invalid request data
+
+```json
+{
+  "error": "invalid request data: missing required field"
+}
+```
+
+**Status:** `500 Internal Server Error` - Email sending failed
+
+```json
+{
+  "error": "failed to send email: connection timeout"
+}
+```
+
+## Development
+
+### Running Locally
+
+```bash
+# Run with HTTP (default port 8080)
+make run
+
+# Run with HTTPS
+make run-https DOMAIN=yourdomain.com
+
+# Build binary
+make build
+```
+
+### Docker Commands
+
+```bash
+# Build image
+make docker-build
+
+# Run with HTTP
+make docker-run
+
+# Run with HTTPS
+make docker-run-https DOMAIN=yourdomain.com
+
+# View logs
+make docker-logs
+
+# Stop and remove container
+make docker-stop
+```
