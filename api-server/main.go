@@ -15,13 +15,17 @@ type application struct {
 }
 
 type config struct {
-	port    int
-	version string
+	port     int
+	version  string
+	certFile string
+	keyFile  string
 }
 
 func main() {
 	var cfg config
 	flag.IntVar(&cfg.port, "port", 8080, "API server port")
+	flag.StringVar(&cfg.certFile, "cert", "", "Path to TLS certificate file (e.g., /path/to/fullchain.pem)")
+	flag.StringVar(&cfg.keyFile, "key", "", "Path to TLS key file (e.g., /path/to/privkey.pem)")
 
 	flag.Parse()
 
@@ -41,7 +45,19 @@ func main() {
 		ErrorLog:     slog.NewLogLogger(logger.Handler(), slog.LevelError),
 	}
 
-	logger.Info("starting server", "addr", srv.Addr, "version", cfg.version)
+	// Check if both cert and key files are provided for HTTPS
+	if cfg.certFile != "" || cfg.keyFile != "" {
+		if cfg.certFile == "" || cfg.keyFile == "" {
+			logger.Error("for HTTPS, both certificate and key files must be provided")
+			os.Exit(1)
+		}
+		logger.Info("starting HTTPS server", "addr", srv.Addr, "version", cfg.version, "cert", cfg.certFile, "key", cfg.keyFile)
+		err := srv.ListenAndServeTLS(cfg.certFile, cfg.keyFile)
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
+
+	logger.Info("starting HTTP server", "addr", srv.Addr, "version", cfg.version)
 
 	err := srv.ListenAndServe()
 	logger.Error(err.Error())

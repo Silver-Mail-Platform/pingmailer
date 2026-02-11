@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"net/mail"
 
-	"github.com/maneeshaxyz/outgoing-email-example/internal/emailer"
+	"github.com/Silver-Mail-Platform/pingmailer/internal/emailer"
 )
 
 type user struct {
