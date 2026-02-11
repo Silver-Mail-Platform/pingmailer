@@ -46,7 +46,11 @@ func main() {
 	}
 
 	// Check if both cert and key files are provided for HTTPS
-	if cfg.certFile != "" && cfg.keyFile != "" {
+	if cfg.certFile != "" || cfg.keyFile != "" {
+		if cfg.certFile == "" || cfg.keyFile == "" {
+			logger.Error("for HTTPS, both certificate and key files must be provided")
+			os.Exit(1)
+		}
 		logger.Info("starting HTTPS server", "addr", srv.Addr, "version", cfg.version, "cert", cfg.certFile, "key", cfg.keyFile)
 		err := srv.ListenAndServeTLS(cfg.certFile, cfg.keyFile)
 		logger.Error(err.Error())
