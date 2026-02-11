@@ -81,9 +81,9 @@ func (m Mailer) send(recipient string, tmpl *template.Template, data any) error 
 	msg.SetBody("text/plain", plainBody.String())
 	msg.AddAlternative("text/html", htmlBody.String())
 
+	// retry sending mail logic
 	for i := 1; i <= 3; i++ {
 		err = m.dialer.DialAndSend(msg)
-		// If everything worked, return nil.
 		if nil == err {
 			return nil
 		}
