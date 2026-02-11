@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"net/mail"
 
@@ -52,20 +51,13 @@ func (app *application) handleNotify(w http.ResponseWriter, r *http.Request) {
 
 	defaultUser := buildDefaultUser(req)
 
-	err = sendNotifyEmail(mailer, req, defaultUser)
-
-	if err != nil {
-		app.logger.Error("failed to send email", "error", err)
-		http.Error(w, "Failed to send email", http.StatusInternalServerError)
-		return
-	}
+	go func(req notifyRequest, defaultUser user, mailer emailer.Mailer) {
+		if err := sendNotifyEmail(mailer, req, defaultUser); err != nil {
+			app.logger.Error("failed to send email", "error", err)
+		}
+	}(req, defaultUser, mailer)
 
 	w.WriteHeader(http.StatusOK)
-	_, err = w.Write([]byte("Email sent successfully"))
-
-	if err != nil {
-		log.Println("Error in handleNotify, error in writing header.")
-	}
 }
 
 func decodeNotifyRequest(r *http.Request) (notifyRequest, error) {

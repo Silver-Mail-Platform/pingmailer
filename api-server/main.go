@@ -22,7 +22,7 @@ type config struct {
 func main() {
 	var cfg config
 	flag.IntVar(&cfg.port, "port", 8080, "API server port")
-
+	flag.StringVar(&cfg.version, "version", "0.1.0", "Version")
 	flag.Parse()
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
