@@ -61,10 +61,9 @@ ENV PORT=8080
 ENV CERT_FILE=""
 ENV KEY_FILE=""
 
-# Default command - runs HTTP mode
-# To run with HTTPS, override CMD or set environment variables
-CMD if [ -n "$CERT_FILE" ] && [ -n "$KEY_FILE" ]; then \
-        ./api-server -port ${PORT} -cert ${CERT_FILE} -key ${KEY_FILE}; \
-    else \
-        ./api-server -port ${PORT}; \
-    fi
+# Copy and set up entrypoint script
+COPY entrypoint.sh .
+RUN chmod +x entrypoint.sh
+
+# Use entrypoint script for proper signal handling
+ENTRYPOINT ["./entrypoint.sh"]
