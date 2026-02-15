@@ -23,4 +23,5 @@ How has this been tested?
 - [ ] My changes don't introduce new warnings or errors
 
 ## Related Issues
-Fixes #(issue number)
+<!-- If this PR fixes an issue, link it here. e.g. "Fixes #123" -->
+Fixes #
