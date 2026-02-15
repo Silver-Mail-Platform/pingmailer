@@ -51,7 +51,7 @@
    cp .env.example .env
    ```
    
-   Edit the `.env` file with your SMTP credentials and server details.
+   Edit the `.env` file to set your `DOMAIN` for SSL certificate configuration. Note that SMTP credentials are provided in the API request body, not in this file.
 
 5. **Start the API server**
    ```bash
