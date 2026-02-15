@@ -60,14 +60,16 @@
 
 6. **Send a test email**
    ```bash
-   curl -X POST https://localhost:8443/api/send \
+   curl -k -X POST https://localhost:8443/notify \
      -H "Content-Type: application/json" \
      -d '{
-       "to": "user@example.com",
-       "subject": "Hello from PingMailer",
-       "template": "welcome"
+       "smtp_host": "your_smtp_host",
+       "smtp_port": 587,
+       "smtp_username": "your_smtp_username",
+       "smtp_password": "your_smtp_password",
+       "smtp_sender": "sender@example.com",
+       "recipient_email": "user@example.com"
      }'
-   ```
 
 ## Architecture
 
