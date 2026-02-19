@@ -189,10 +189,10 @@ while IFS= read -r line; do
 
 			echo -e "${GREEN}  ✓ Flow started: $FLOW_ID${NC}"
 
-			# Step 2: Submit user type (emailuser maps to "Person")
+			# Step 2: Submit user type (emailuser)
 			echo -e "${CYAN}  → Step 2: Submitting user type...${NC}"
 			if ! thunder_api_call "https://${THUNDER_HOST}:${THUNDER_PORT}/flow/execute" \
-				"{\"flowId\":\"${FLOW_ID}\",\"inputs\":{\"userType\":\"Person\"},\"verbose\":true,\"action\":\"usertype_submit\"}" \
+				"{\"flowId\":\"${FLOW_ID}\",\"inputs\":{\"userType\":\"emailuser\"},\"verbose\":true,\"action\":\"usertype_submit\"}" \
 				"submit user type"; then
 				USER_USERNAME=""
 				continue
