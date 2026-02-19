@@ -97,6 +97,14 @@ curl -X POST https://your-domain:8443/notify \
   }'
 ```
 
+**Response:**
+```json
+{
+  "message": "Email queued successfully",
+  "status": "ok"
+}
+```
+
 ### Health Check
 
 **Endpoint:** `GET /health`

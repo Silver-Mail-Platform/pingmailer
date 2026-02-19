@@ -137,6 +137,12 @@ curl -k -X POST https://localhost:8080/notify \
 
 **Response:**
 - `200 OK`: Email queued successfully
+  ```json
+  {
+    "message": "Email queued successfully",
+    "status": "ok"
+  }
+  ```
 - `400 Bad Request`: Invalid request body or missing required fields
 - `401 Unauthorized`: Missing, invalid, or expired access token
 

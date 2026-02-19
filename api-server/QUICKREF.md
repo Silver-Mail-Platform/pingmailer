@@ -38,6 +38,14 @@ curl -X POST https://localhost:8080/notify \
   }'
 ```
 
+**Response:**
+```json
+{
+  "message": "Email queued successfully",
+  "status": "ok"
+}
+```
+
 ## 3. Check Health
 
 ```bash
