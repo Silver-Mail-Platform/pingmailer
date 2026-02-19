@@ -23,6 +23,10 @@ MAIL_DOMAIN=${MAIL_DOMAIN:-example.local}
 LETSENCRYPT_PATH="${ROOT_DIR}/silver-config/certbot/keys/etc/live/${MAIL_DOMAIN}"
 RAVEN_CERT_PATH="${ROOT_DIR}/silver-config/raven/certs"
 
+# --- Create necessary directories ---
+mkdir -p "$(dirname "$OUTPUT_FILE")"
+mkdir -p "${RAVEN_CERT_PATH}"
+
 # --- Generate raven.yaml ---
 cat >"$OUTPUT_FILE" <<EOF
 domain: ${MAIL_DOMAIN}
