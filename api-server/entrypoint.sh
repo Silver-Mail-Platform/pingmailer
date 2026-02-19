@@ -4,19 +4,11 @@ set -e
 # Build command with OAuth2 parameters
 CMD="./api-server -port ${PORT}"
 
-# Add OAuth2 configuration
-if [ -n "$OAUTH2_CLIENT_ID" ] && [ -n "$OAUTH2_CLIENT_SECRET" ]; then
-    CMD="$CMD -oauth2-client-id ${OAUTH2_CLIENT_ID} -oauth2-client-secret ${OAUTH2_CLIENT_SECRET}"
-    
-    if [ -n "$OAUTH2_TOKEN_URL" ]; then
-        CMD="$CMD -oauth2-token-url ${OAUTH2_TOKEN_URL}"
-    fi
-    
-    if [ -n "$OAUTH2_INTROSPECT_URL" ]; then
-        CMD="$CMD -oauth2-introspect-url ${OAUTH2_INTROSPECT_URL}"
-    fi
+# Add OAuth2 introspection URL
+if [ -n "$OAUTH2_INTROSPECT_URL" ]; then
+    CMD="$CMD -oauth2-introspect-url ${OAUTH2_INTROSPECT_URL}"
 else
-    echo "Error: OAUTH2_CLIENT_ID and OAUTH2_CLIENT_SECRET must be set"
+    echo "Error: OAUTH2_INTROSPECT_URL must be set"
     exit 1
 fi
 

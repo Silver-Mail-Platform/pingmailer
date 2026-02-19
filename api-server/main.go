@@ -28,18 +28,15 @@ func main() {
 	flag.StringVar(&cfg.version, "version", "0.1.0", "Version")
 	flag.StringVar(&cfg.certFile, "cert", "", "Path to TLS certificate file (e.g., /path/to/fullchain.pem)")
 	flag.StringVar(&cfg.keyFile, "key", "", "Path to TLS key file (e.g., /path/to/privkey.pem)")
-	flag.StringVar(&cfg.oauth2.TokenURL, "oauth2-token-url", "https://localhost:8090/oauth2/token", "OAuth2 token endpoint URL")
-	flag.StringVar(&cfg.oauth2.IntrospectURL, "oauth2-introspect-url", "https://localhost:8090/oauth2/introspect", "OAuth2 token introspection endpoint URL")
-	flag.StringVar(&cfg.oauth2.ClientID, "oauth2-client-id", "", "OAuth2 client ID")
-	flag.StringVar(&cfg.oauth2.ClientSecret, "oauth2-client-secret", "", "OAuth2 client secret")
+	flag.StringVar(&cfg.oauth2.IntrospectURL, "oauth2-introspect-url", "", "OAuth2 token introspection endpoint URL")
 
 	flag.Parse()
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
-	// Validate OAuth2 configuration
-	if cfg.oauth2.ClientID == "" || cfg.oauth2.ClientSecret == "" {
-		logger.Error("OAuth2 client credentials must be provided via -oauth2-client-id and -oauth2-client-secret flags")
+	// Validate OAuth2 introspection URL
+	if cfg.oauth2.IntrospectURL == "" {
+		logger.Error("OAuth2 introspection URL must be provided via -oauth2-introspect-url flag")
 		os.Exit(1)
 	}
 

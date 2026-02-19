@@ -48,13 +48,7 @@ The API will be available at `https://your-domain:8443/notify`
 
 Before making API requests, you need to:
 
-1. **Obtain an application access token** from your OAuth2 server:
-
-```bash
-curl -k -X POST https://localhost:8090/oauth2/token \
-  -d 'grant_type=client_credentials' \
-  -u '<client_id>:<client_secret>'
-```
+1. **Obtain an application access token** from your OAuth2 server using your preferred OAuth2 flow (client credentials, authorization code, etc.)
 
 2. **Use the access token** in your API requests:
 
@@ -76,10 +70,9 @@ See [AUTH.md](AUTH.md) for complete authentication details and examples.
 **Example Request:**
 
 ```bash
-# First get access token
-TOKEN=$(curl -k -X POST https://localhost:8090/oauth2/token \
-  -d 'grant_type=client_credentials' \
-  -u 'client-id:client-secret' | jq -r '.access_token')
+# First obtain an access token from your OAuth2 server
+# (example assumes you already have a token)
+TOKEN="your-access-token"
 
 # Then send notification
 curl -X POST https://your-domain:8443/notify \
@@ -218,24 +211,21 @@ curl -X POST https://your-domain:8443/notify \
 
 ### Running Locally
 
-The server requires OAuth2 client credentials to start:
+The server requires the OAuth2 introspection URL to start:
 
 ```bash
-# Set OAuth2 credentials
-export OAUTH2_CLIENT_ID="your-client-id"
-export OAUTH2_CLIENT_SECRET="your-client-secret"
+# Set OAuth2 introspection URL
+export OAUTH2_INTROSPECT_URL="https://localhost:8090/oauth2/introspect"
 
 # Run with HTTP (default port 8080)
 go run . \
-  -oauth2-client-id "$OAUTH2_CLIENT_ID" \
-  -oauth2-client-secret "$OAUTH2_CLIENT_SECRET"
+  -oauth2-introspect-url "$OAUTH2_INTROSPECT_URL"
 
 # Run with HTTPS
 go run . \
   -cert /path/to/cert.pem \
   -key /path/to/key.pem \
-  -oauth2-client-id "$OAUTH2_CLIENT_ID" \
-  -oauth2-client-secret "$OAUTH2_CLIENT_SECRET"
+  -oauth2-introspect-url "$OAUTH2_INTROSPECT_URL"
 
 # Build binary
 make build
@@ -249,9 +239,7 @@ make build
 | `-version` | 0.1.0 | Application version |
 | `-cert` | - | Path to TLS certificate file |
 | `-key` | - | Path to TLS key file |
-| `-oauth2-token-url` | https://localhost:8090/oauth2/token | OAuth2 token endpoint |
-| `-oauth2-client-id` | - | OAuth2 client ID (required) |
-| `-oauth2-client-secret` | - | OAuth2 client secret (required) |
+| `-oauth2-introspect-url` | - | OAuth2 token introspection endpoint (required) |
 
 ### Example Scripts
 

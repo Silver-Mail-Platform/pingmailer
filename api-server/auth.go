@@ -12,10 +12,7 @@ import (
 
 // OAuth2Config holds the OAuth2 server configuration
 type OAuth2Config struct {
-	TokenURL       string
-	IntrospectURL  string
-	ClientID       string
-	ClientSecret   string
+	IntrospectURL string
 }
 
 // IntrospectionResponse represents the OAuth2 token introspection response
@@ -53,24 +50,15 @@ func (app *application) validateAccessToken(token string) error {
 		Timeout: 10 * time.Second,
 	}
 
-	// Build introspection URL
-	introspectURL := app.config.oauth2.IntrospectURL
-	if introspectURL == "" {
-		// Default to token URL with /introspect path
-		introspectURL = strings.Replace(app.config.oauth2.TokenURL, "/token", "/introspect", 1)
-	}
-
 	// Create form data with the token
 	data := url.Values{}
 	data.Set("token", token)
 
-	req, err := http.NewRequest("POST", introspectURL, strings.NewReader(data.Encode()))
+	req, err := http.NewRequest("POST", app.config.oauth2.IntrospectURL, strings.NewReader(data.Encode()))
 	if err != nil {
 		return fmt.Errorf("failed to create introspection request: %w", err)
 	}
 
-	// Set Basic Auth with client credentials
-	req.SetBasicAuth(app.config.oauth2.ClientID, app.config.oauth2.ClientSecret)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	resp, err := client.Do(req)
