@@ -19,6 +19,7 @@ type config struct {
 	version  string
 	certFile string
 	keyFile  string
+	oauth2   OAuth2Config
 }
 
 func main() {
@@ -27,10 +28,19 @@ func main() {
 	flag.StringVar(&cfg.version, "version", "0.1.0", "Version")
 	flag.StringVar(&cfg.certFile, "cert", "", "Path to TLS certificate file (e.g., /path/to/fullchain.pem)")
 	flag.StringVar(&cfg.keyFile, "key", "", "Path to TLS key file (e.g., /path/to/privkey.pem)")
+	flag.StringVar(&cfg.oauth2.TokenURL, "oauth2-token-url", "https://localhost:8090/oauth2/token", "OAuth2 token endpoint URL")
+	flag.StringVar(&cfg.oauth2.ClientID, "oauth2-client-id", "", "OAuth2 client ID")
+	flag.StringVar(&cfg.oauth2.ClientSecret, "oauth2-client-secret", "", "OAuth2 client secret")
 
 	flag.Parse()
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+
+	// Validate OAuth2 configuration
+	if cfg.oauth2.ClientID == "" || cfg.oauth2.ClientSecret == "" {
+		logger.Error("OAuth2 client credentials must be provided via -oauth2-client-id and -oauth2-client-secret flags")
+		os.Exit(1)
+	}
 
 	app := &application{
 		config: cfg,

@@ -8,6 +8,16 @@ import (
 	"github.com/Silver-Mail-Platform/pingmailer/internal/emailer"
 )
 
+// handleHealth provides a simple health check endpoint
+func (app *application) handleHealth(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{
+		"status":  "ok",
+		"version": app.config.version,
+	})
+}
+
 type user struct {
 	Name  string
 	Email string
