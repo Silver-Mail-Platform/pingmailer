@@ -29,6 +29,7 @@ func main() {
 	flag.StringVar(&cfg.certFile, "cert", "", "Path to TLS certificate file (e.g., /path/to/fullchain.pem)")
 	flag.StringVar(&cfg.keyFile, "key", "", "Path to TLS key file (e.g., /path/to/privkey.pem)")
 	flag.StringVar(&cfg.oauth2.TokenURL, "oauth2-token-url", "https://localhost:8090/oauth2/token", "OAuth2 token endpoint URL")
+	flag.StringVar(&cfg.oauth2.IntrospectURL, "oauth2-introspect-url", "https://localhost:8090/oauth2/introspect", "OAuth2 token introspection endpoint URL")
 	flag.StringVar(&cfg.oauth2.ClientID, "oauth2-client-id", "", "OAuth2 client ID")
 	flag.StringVar(&cfg.oauth2.ClientSecret, "oauth2-client-secret", "", "OAuth2 client secret")
 

@@ -50,10 +50,19 @@
                  │
                  ├─▶ Validate Bearer Token ────────┐
                  │   - Extract from Authorization   │
-                 │   - Compare with cached token    │
+                 │   - Call introspection endpoint  │
+                 │   - Verify active=true           │
                  │   - Check expiration             │
                  │                                  │
-                 │   ◀────── Valid/Invalid ─────────┘
+                 │   POST /oauth2/introspect        │
+                 │   ─────────────────────────────▶ │
+                 │                                  │
+                 │   {                              │
+                 │     "active": true,              │
+                 │     "client_id": "...",          │
+                 │     "exp": 1771499415            │
+                 │   }                              │
+                 │   ◀─────────────────────────────┘
                  │
                  │   If Invalid → 401 Unauthorized
                  │

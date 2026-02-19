@@ -11,7 +11,7 @@ The PingMailer API server now implements dual authentication to ensure secure ac
 
 ### 1. Application Authentication (OAuth2 Client Credentials)
 
-The API validates that requests come from authorized applications using OAuth2 Bearer tokens.
+The API validates that requests come from authorized applications using OAuth2 Bearer tokens via **token introspection**.
 
 #### Getting an Application Access Token
 
@@ -29,6 +29,37 @@ curl -k -X POST https://localhost:8090/oauth2/token \
   "expires_in": 3600
 }
 ```
+
+#### Token Validation (Server-Side)
+
+When a client makes a request, the API server validates the token by calling the OAuth2 introspection endpoint:
+
+```bash
+curl -k -X POST https://localhost:8090/oauth2/introspect \
+  -u '<server_client_id>:<server_client_secret>' \
+  -d "token=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+**Introspection Response:**
+```json
+{
+  "active": true,
+  "client_id": "myclient_id",
+  "token_type": "Bearer",
+  "exp": 1771499415,
+  "iat": 1771495815,
+  "nbf": 1771495815,
+  "sub": "myclient_id",
+  "aud": "myclient_id",
+  "iss": "https://aravindahwk.org:8090",
+  "jti": "019c7560-f99f-70bd-a5cc-2a0b941acbe2"
+}
+```
+
+The server checks:
+- `active` is `true`
+- Token has not expired (`exp` > current time)
+
 
 ### 2. User Authentication (SMTP Credentials)
 
@@ -144,6 +175,7 @@ The server requires OAuth2 client credentials to be configured at startup:
 - `-cert`: Path to TLS certificate file (optional, enables HTTPS)
 - `-key`: Path to TLS key file (optional, required if cert is provided)
 - `-oauth2-token-url`: OAuth2 token endpoint URL (default: "https://localhost:8090/oauth2/token")
+- `-oauth2-introspect-url`: OAuth2 introspection endpoint URL (default: "https://localhost:8090/oauth2/introspect")
 - `-oauth2-client-id`: OAuth2 client ID (required)
 - `-oauth2-client-secret`: OAuth2 client secret (required)
 
@@ -162,11 +194,12 @@ export OAUTH2_CLIENT_SECRET="your-client-secret"
 
 ## Security Considerations
 
-1. **Token Caching**: Application access tokens are cached and automatically refreshed before expiration
-2. **HTTPS Only**: Always use HTTPS in production to protect tokens and credentials in transit
-3. **Credential Separation**: Application credentials (client_id/secret) are separate from user SMTP credentials
-4. **Token Validation**: Each request validates the Bearer token before processing
-5. **SMTP Authentication**: User SMTP credentials are validated when connecting to the SMTP server
+1. **Token Introspection**: Tokens are validated in real-time using OAuth2 introspection endpoint
+2. **No Token Caching**: Each request is validated against the OAuth2 server for maximum security
+3. **HTTPS Only**: Always use HTTPS in production to protect tokens and credentials in transit
+4. **Credential Separation**: Application credentials (client_id/secret) are separate from user SMTP credentials
+5. **Token Validation**: Each request validates the Bearer token via introspection before processing
+6. **SMTP Authentication**: User SMTP credentials are validated when connecting to the SMTP server
 
 ## Error Handling
 

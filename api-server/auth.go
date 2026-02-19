@@ -5,32 +5,32 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 )
 
 // OAuth2Config holds the OAuth2 server configuration
 type OAuth2Config struct {
-	TokenURL     string
-	ClientID     string
-	ClientSecret string
+	TokenURL       string
+	IntrospectURL  string
+	ClientID       string
+	ClientSecret   string
 }
 
-// TokenResponse represents the OAuth2 token response
-type TokenResponse struct {
-	AccessToken string `json:"access_token"`
-	TokenType   string `json:"token_type"`
-	ExpiresIn   int    `json:"expires_in"`
-	Scope       string `json:"scope,omitempty"`
+// IntrospectionResponse represents the OAuth2 token introspection response
+type IntrospectionResponse struct {
+	Active    bool   `json:"active"`
+	ClientID  string `json:"client_id,omitempty"`
+	TokenType string `json:"token_type,omitempty"`
+	Exp       int64  `json:"exp,omitempty"`
+	Iat       int64  `json:"iat,omitempty"`
+	Nbf       int64  `json:"nbf,omitempty"`
+	Sub       string `json:"sub,omitempty"`
+	Aud       string `json:"aud,omitempty"`
+	Iss       string `json:"iss,omitempty"`
+	Jti       string `json:"jti,omitempty"`
 }
-
-// TokenCache holds cached access tokens with expiration
-type TokenCache struct {
-	Token     string
-	ExpiresAt time.Time
-}
-
-var tokenCache *TokenCache
 
 // extractBearerToken extracts the Bearer token from the Authorization header
 func extractBearerToken(r *http.Request) (string, error) {
@@ -47,50 +47,26 @@ func extractBearerToken(r *http.Request) (string, error) {
 	return parts[1], nil
 }
 
-// validateAccessToken validates the provided access token against the OAuth2 server
+// validateAccessToken validates the provided access token using OAuth2 token introspection
 func (app *application) validateAccessToken(token string) error {
-	// Get a valid application token from cache or fetch a new one
-	appToken, err := app.getApplicationToken()
-	if err != nil {
-		return fmt.Errorf("failed to get application token: %w", err)
-	}
-
-	// Compare the provided token with the valid application token
-	if token != appToken {
-		return fmt.Errorf("invalid access token")
-	}
-
-	return nil
-}
-
-// getApplicationToken retrieves a valid application token from cache or fetches a new one
-func (app *application) getApplicationToken() (string, error) {
-	// Check if we have a valid cached token
-	if tokenCache != nil && time.Now().Before(tokenCache.ExpiresAt) {
-		return tokenCache.Token, nil
-	}
-
-	// Fetch a new token
-	token, err := app.fetchApplicationToken()
-	if err != nil {
-		return "", err
-	}
-
-	return token, nil
-}
-
-// fetchApplicationToken fetches a new application access token from the OAuth2 server
-func (app *application) fetchApplicationToken() (string, error) {
 	client := &http.Client{
 		Timeout: 10 * time.Second,
 	}
 
-	// Create the request body
-	body := strings.NewReader("grant_type=client_credentials")
+	// Build introspection URL
+	introspectURL := app.config.oauth2.IntrospectURL
+	if introspectURL == "" {
+		// Default to token URL with /introspect path
+		introspectURL = strings.Replace(app.config.oauth2.TokenURL, "/token", "/introspect", 1)
+	}
 
-	req, err := http.NewRequest("POST", app.config.oauth2.TokenURL, body)
+	// Create form data with the token
+	data := url.Values{}
+	data.Set("token", token)
+
+	req, err := http.NewRequest("POST", introspectURL, strings.NewReader(data.Encode()))
 	if err != nil {
-		return "", fmt.Errorf("failed to create token request: %w", err)
+		return fmt.Errorf("failed to create introspection request: %w", err)
 	}
 
 	// Set Basic Auth with client credentials
@@ -99,31 +75,36 @@ func (app *application) fetchApplicationToken() (string, error) {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("failed to request token: %w", err)
+		return fmt.Errorf("failed to introspect token: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		bodyBytes, _ := io.ReadAll(resp.Body)
-		return "", fmt.Errorf("token request failed with status %d: %s", resp.StatusCode, string(bodyBytes))
+		return fmt.Errorf("introspection failed with status %d: %s", resp.StatusCode, string(bodyBytes))
 	}
 
-	var tokenResp TokenResponse
-	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
-		return "", fmt.Errorf("failed to decode token response: %w", err)
+	var introspection IntrospectionResponse
+	if err := json.NewDecoder(resp.Body).Decode(&introspection); err != nil {
+		return fmt.Errorf("failed to decode introspection response: %w", err)
 	}
 
-	// Cache the token with a buffer before expiration (90% of the actual expiration time)
-	expiresIn := time.Duration(tokenResp.ExpiresIn) * time.Second
-	bufferTime := expiresIn * 9 / 10 // 90% of expiration time
-	tokenCache = &TokenCache{
-		Token:     tokenResp.AccessToken,
-		ExpiresAt: time.Now().Add(bufferTime),
+	// Check if token is active
+	if !introspection.Active {
+		return fmt.Errorf("token is not active")
 	}
 
-	app.logger.Info("fetched new application access token", "expires_in", tokenResp.ExpiresIn)
+	// Optionally validate additional claims
+	if introspection.Exp > 0 && time.Now().Unix() > introspection.Exp {
+		return fmt.Errorf("token has expired")
+	}
 
-	return tokenResp.AccessToken, nil
+	app.logger.Info("token validated successfully",
+		"client_id", introspection.ClientID,
+		"sub", introspection.Sub,
+		"exp", introspection.Exp)
+
+	return nil
 }
 
 // authMiddleware validates the Bearer token before allowing access to protected endpoints

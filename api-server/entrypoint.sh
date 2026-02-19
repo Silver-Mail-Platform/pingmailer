@@ -11,6 +11,10 @@ if [ -n "$OAUTH2_CLIENT_ID" ] && [ -n "$OAUTH2_CLIENT_SECRET" ]; then
     if [ -n "$OAUTH2_TOKEN_URL" ]; then
         CMD="$CMD -oauth2-token-url ${OAUTH2_TOKEN_URL}"
     fi
+    
+    if [ -n "$OAUTH2_INTROSPECT_URL" ]; then
+        CMD="$CMD -oauth2-introspect-url ${OAUTH2_INTROSPECT_URL}"
+    fi
 else
     echo "Error: OAUTH2_CLIENT_ID and OAUTH2_CLIENT_SECRET must be set"
     exit 1
