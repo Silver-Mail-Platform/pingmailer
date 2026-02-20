@@ -46,10 +46,6 @@ func extractBearerToken(r *http.Request) (string, error) {
 
 // validateAccessToken validates the provided access token using OAuth2 token introspection
 func (app *application) validateAccessToken(token string) error {
-	client := &http.Client{
-		Timeout: 10 * time.Second,
-	}
-
 	// Create form data with the token
 	data := url.Values{}
 	data.Set("token", token)
@@ -61,7 +57,7 @@ func (app *application) validateAccessToken(token string) error {
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	resp, err := client.Do(req)
+	resp, err := app.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("failed to introspect token: %w", err)
 	}

@@ -10,8 +10,9 @@ import (
 )
 
 type application struct {
-	config config
-	logger *slog.Logger
+	config     config
+	logger     *slog.Logger
+	httpClient *http.Client
 }
 
 type config struct {
@@ -40,9 +41,15 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Create a shared HTTP client for token introspection
+	httpClient := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
 	app := &application{
-		config: cfg,
-		logger: logger,
+		config:     cfg,
+		logger:     logger,
+		httpClient: httpClient,
 	}
 
 	srv := &http.Server{
