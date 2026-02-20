@@ -2,10 +2,8 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log/slog"
 	"net/http"
-	"net/url"
 	"os"
 	"time"
 )
@@ -36,22 +34,22 @@ func main() {
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
-	// Validate OAuth2 introspection URL
-	if cfg.oauth2.IntrospectURL == "" {
-		logger.Error("OAuth2 introspection URL must be provided via -oauth2-introspect-url flag")
-		os.Exit(1)
-	}
+	// // Validate OAuth2 introspection URL
+	// if cfg.oauth2.IntrospectURL == "" {
+	// 	logger.Error("OAuth2 introspection URL must be provided via -oauth2-introspect-url flag")
+	// 	os.Exit(1)
+	// }
 
-	// Validate that the introspection URL is properly formatted and uses HTTPS
-	introspectURL, err := url.Parse(cfg.oauth2.IntrospectURL)
-	if err != nil {
-		logger.Error("invalid OAuth2 introspection URL", "error", err)
-		os.Exit(1)
-	}
-	if introspectURL.Scheme != "http" && introspectURL.Scheme != "https" {
-		logger.Error("OAuth2 introspection URL must use http or https scheme")
-		os.Exit(1)
-	}
+	// // Validate that the introspection URL is properly formatted and uses HTTPS
+	// introspectURL, err := url.Parse(cfg.oauth2.IntrospectURL)
+	// if err != nil {
+	// 	logger.Error("invalid OAuth2 introspection URL", "error", err)
+	// 	os.Exit(1)
+	// }
+	// if introspectURL.Scheme != "http" && introspectURL.Scheme != "https" {
+	// 	logger.Error("OAuth2 introspection URL must use http or https scheme")
+	// 	os.Exit(1)
+	// }
 
 	// Create a shared HTTP client for token introspection
 	httpClient := &http.Client{
@@ -64,30 +62,9 @@ func main() {
 		httpClient: httpClient,
 	}
 
-	srv := &http.Server{
-		Addr:         fmt.Sprintf(":%d", cfg.port),
-		Handler:      app.routes(),
-		IdleTimeout:  time.Minute,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 30 * time.Second,
-		ErrorLog:     slog.NewLogLogger(logger.Handler(), slog.LevelError),
-	}
-
-	// Check if both cert and key files are provided for HTTPS
-	if cfg.certFile != "" || cfg.keyFile != "" {
-		if cfg.certFile == "" || cfg.keyFile == "" {
-			logger.Error("for HTTPS, both certificate and key files must be provided")
-			os.Exit(1)
-		}
-		logger.Info("starting HTTPS server", "addr", srv.Addr, "version", cfg.version, "cert", cfg.certFile, "key", cfg.keyFile)
-		srvErr := srv.ListenAndServeTLS(cfg.certFile, cfg.keyFile)
-		logger.Error(srvErr.Error())
+	err := app.serve()
+	if err != nil {
+		logger.Error(err.Error())
 		os.Exit(1)
 	}
-
-	logger.Info("starting HTTP server", "addr", srv.Addr, "version", cfg.version)
-
-	srvErr := srv.ListenAndServe()
-	logger.Error(srvErr.Error())
-	os.Exit(1)
 }
