@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"os"
 	"time"
 )
@@ -41,6 +42,17 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Validate that the introspection URL is properly formatted and uses HTTPS
+	introspectURL, err := url.Parse(cfg.oauth2.IntrospectURL)
+	if err != nil {
+		logger.Error("invalid OAuth2 introspection URL", "error", err)
+		os.Exit(1)
+	}
+	if introspectURL.Scheme != "http" && introspectURL.Scheme != "https" {
+		logger.Error("OAuth2 introspection URL must use http or https scheme")
+		os.Exit(1)
+	}
+
 	// Create a shared HTTP client for token introspection
 	httpClient := &http.Client{
 		Timeout: 10 * time.Second,
@@ -68,14 +80,14 @@ func main() {
 			os.Exit(1)
 		}
 		logger.Info("starting HTTPS server", "addr", srv.Addr, "version", cfg.version, "cert", cfg.certFile, "key", cfg.keyFile)
-		err := srv.ListenAndServeTLS(cfg.certFile, cfg.keyFile)
-		logger.Error(err.Error())
+		srvErr := srv.ListenAndServeTLS(cfg.certFile, cfg.keyFile)
+		logger.Error(srvErr.Error())
 		os.Exit(1)
 	}
 
 	logger.Info("starting HTTP server", "addr", srv.Addr, "version", cfg.version)
 
-	err := srv.ListenAndServe()
-	logger.Error(err.Error())
+	srvErr := srv.ListenAndServe()
+	logger.Error(srvErr.Error())
 	os.Exit(1)
 }

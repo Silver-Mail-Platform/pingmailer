@@ -50,6 +50,7 @@ func (app *application) validateAccessToken(token string) error {
 	data := url.Values{}
 	data.Set("token", token)
 
+	// #nosec G704 -- IntrospectURL is from server configuration, not user input
 	req, err := http.NewRequest("POST", app.config.oauth2.IntrospectURL, strings.NewReader(data.Encode()))
 	if err != nil {
 		return fmt.Errorf("failed to create introspection request: %w", err)
@@ -57,6 +58,7 @@ func (app *application) validateAccessToken(token string) error {
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
+	// #nosec G704 -- IntrospectURL is from server configuration, validated at startup
 	resp, err := app.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("failed to introspect token: %w", err)
