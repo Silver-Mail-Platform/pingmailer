@@ -12,10 +12,12 @@ import (
 func (app *application) handleHealth(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{
+	if err := json.NewEncoder(w).Encode(map[string]string{
 		"status":  "ok",
 		"version": app.config.version,
-	})
+	}); err != nil {
+		app.logger.Error("failed to encode health response", "error", err)
+	}
 }
 
 type user struct {
@@ -72,10 +74,12 @@ func (app *application) handleNotify(w http.ResponseWriter, r *http.Request) {
 	// Send success response
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{
+	if err := json.NewEncoder(w).Encode(map[string]string{
 		"message": "Email queued successfully",
 		"status":  "ok",
-	})
+	}); err != nil {
+		app.logger.Error("failed to encode notify response", "error", err)
+	}
 }
 
 func decodeNotifyRequest(r *http.Request) (notifyRequest, error) {

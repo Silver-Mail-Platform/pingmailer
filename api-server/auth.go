@@ -61,7 +61,11 @@ func (app *application) validateAccessToken(token string) error {
 	if err != nil {
 		return fmt.Errorf("failed to introspect token: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			app.logger.Warn("failed to close response body", "error", closeErr)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		bodyBytes, _ := io.ReadAll(resp.Body)
