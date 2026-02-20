@@ -101,7 +101,7 @@ func (app *application) authMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		token, err := extractBearerToken(r)
 		if err != nil {
 			app.logger.Warn("authentication failed", "error", err)
-			http.Error(w, "Unauthorized: "+err.Error(), http.StatusUnauthorized)
+			http.Error(w, "Unauthorized: invalid authorization token", http.StatusUnauthorized)
 			return
 		}
 
