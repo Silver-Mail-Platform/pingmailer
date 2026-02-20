@@ -14,6 +14,7 @@ services:
       - PORT=8443
       - CERT_FILE=/certs/live/${DOMAIN}/fullchain.pem
       - KEY_FILE=/certs/live/${DOMAIN}/privkey.pem
+      - OAUTH2_INTROSPECT_URL=${OAUTH2_INTROSPECT_URL}
     
     # Mount entire certbot etc directory to preserve symlinks
     # This allows Docker to follow the symlinks to the archive directory
