@@ -1,25 +1,6 @@
 # PingMailer API Server
 
-A REST API service for sending emails via SMTP with dual authentication. Part of the Silver Mail Platform.
-
-## Features
-
-- **Dual Authentication**: 
-  - Application-level authentication via OAuth2 Bearer tokens
-  - User-level authentication via SMTP credentials
-- **Secure Email Delivery**: Send emails using user-provided SMTP credentials
-- **Custom Templates**: Support for custom email templates
-- **HTTPS Support**: TLS/SSL support for secure communications
-- **Health Monitoring**: Built-in health check endpoint
-
-## Authentication
-
-This API implements dual authentication for enhanced security:
-
-1. **Application Authentication**: OAuth2 client credentials flow validates the calling application
-2. **User Authentication**: SMTP credentials in the request body authenticate the email sender
-
-See [AUTH.md](AUTH.md) for detailed authentication documentation.
+A simple REST API service for sending emails via SMTP. Part of the Silver Mail Platform.
 
 ## Quick Start
 
@@ -44,39 +25,14 @@ The API will be available at `https://your-domain:8443/notify`
 
 ## API Usage
 
-### Authentication Flow
-
-Before making API requests, you need to:
-
-1. **Obtain an application access token** from your OAuth2 server using your preferred OAuth2 flow (client credentials, authorization code, etc.)
-
-2. **Use the access token** in your API requests:
-
-```bash
-curl -X POST https://your-domain:8443/notify \
-  -H "Authorization: Bearer <access_token>" \
-  -H "Content-Type: application/json" \
-  -d '{...}'
-```
-
-See [AUTH.md](AUTH.md) for complete authentication details and examples.
-
 ### Send Email
 
 **Endpoint:** `POST /notify`
 
-**Authentication:** Required (Bearer token)
-
 **Example Request:**
 
 ```bash
-# First obtain an access token from your OAuth2 server
-# (example assumes you already have a token)
-TOKEN="your-access-token"
-
-# Then send notification
 curl -X POST https://your-domain:8443/notify \
-  -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "smtp_host": "smtp-server-container",
@@ -88,26 +44,6 @@ curl -X POST https://your-domain:8443/notify \
     "recipient_name": "John Doe",
     "app_name": "MyApp"
   }'
-```
-
-**Response:**
-```json
-{
-  "message": "Email queued successfully",
-  "status": "ok"
-}
-```
-
-### Health Check
-
-**Endpoint:** `GET /health`
-
-**Authentication:** Not required
-
-**Example:**
-
-```bash
-curl https://your-domain:8443/health
 ```
 
 ### Required Fields
@@ -211,52 +147,15 @@ curl -X POST https://your-domain:8443/notify \
 
 ### Running Locally
 
-The server requires the OAuth2 introspection URL to start:
-
 ```bash
-# Set OAuth2 introspection URL
-export OAUTH2_INTROSPECT_URL="https://localhost:8090/oauth2/introspect"
-
 # Run with HTTP (default port 8080)
-go run . \
-  -oauth2-introspect-url "$OAUTH2_INTROSPECT_URL"
+make run
 
 # Run with HTTPS
-go run . \
-  -cert /path/to/cert.pem \
-  -key /path/to/key.pem \
-  -oauth2-introspect-url "$OAUTH2_INTROSPECT_URL"
+make run-https DOMAIN=yourdomain.com
 
 # Build binary
 make build
-```
-
-### Command-line Flags
-
-| Flag | Default | Description |
-|------|---------|-------------|
-| `-port` | 8080 | API server port |
-| `-version` | 0.1.0 | Application version |
-| `-cert` | - | Path to TLS certificate file |
-| `-key` | - | Path to TLS key file |
-| `-oauth2-introspect-url` | - | OAuth2 token introspection endpoint (required) |
-
-### Example Scripts
-
-See the `examples/` directory for usage examples:
-
-- `test-auth.sh` - Bash script demonstrating the complete authentication flow
-- `client.py` - Python client library with dual authentication
-
-```bash
-# Run bash example
-cd examples
-chmod +x test-auth.sh
-./test-auth.sh
-
-# Run Python example
-pip install requests
-python client.py
 ```
 
 ### Docker Commands
