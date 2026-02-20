@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"os"
 	"time"
 )
@@ -34,22 +35,22 @@ func main() {
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
-	// // Validate OAuth2 introspection URL
-	// if cfg.oauth2.IntrospectURL == "" {
-	// 	logger.Error("OAuth2 introspection URL must be provided via -oauth2-introspect-url flag")
-	// 	os.Exit(1)
-	// }
+	// Validate OAuth2 introspection URL
+	if cfg.oauth2.IntrospectURL == "" {
+		logger.Error("OAuth2 introspection URL must be provided via -oauth2-introspect-url flag")
+		os.Exit(1)
+	}
 
-	// // Validate that the introspection URL is properly formatted and uses HTTPS
-	// introspectURL, err := url.Parse(cfg.oauth2.IntrospectURL)
-	// if err != nil {
-	// 	logger.Error("invalid OAuth2 introspection URL", "error", err)
-	// 	os.Exit(1)
-	// }
-	// if introspectURL.Scheme != "http" && introspectURL.Scheme != "https" {
-	// 	logger.Error("OAuth2 introspection URL must use http or https scheme")
-	// 	os.Exit(1)
-	// }
+	// Validate that the introspection URL is properly formatted and uses HTTPS
+	introspectURL, err := url.Parse(cfg.oauth2.IntrospectURL)
+	if err != nil {
+		logger.Error("invalid OAuth2 introspection URL", "error", err)
+		os.Exit(1)
+	}
+	if introspectURL.Scheme != "http" && introspectURL.Scheme != "https" {
+		logger.Error("OAuth2 introspection URL must use http or https scheme")
+		os.Exit(1)
+	}
 
 	// Create a shared HTTP client for token introspection
 	httpClient := &http.Client{
