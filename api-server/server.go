@@ -33,38 +33,29 @@ func (app *application) serve() error {
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 		shutdownError <- srv.Shutdown(ctx)
-		os.Exit(0)
 	}()
 
-	// Check if both cert and key files are provided for HTTPS
+	var err error
 	if app.config.certFile != "" || app.config.keyFile != "" {
 		if app.config.certFile == "" || app.config.keyFile == "" {
-			app.logger.Error("for HTTPS, both certificate and key files must be provided")
-			os.Exit(1)
+			return errors.New("for HTTPS, both certificate and key files must be provided")
 		}
 		app.logger.Info("starting HTTPS server", "addr", srv.Addr, "version", app.config.version, "cert", app.config.certFile, "key", app.config.keyFile)
-		err := srv.ListenAndServeTLS(app.config.certFile, app.config.keyFile)
-		if !errors.Is(err, http.ErrServerClosed) {
-			return err
-		}
-		err = <-shutdownError
-		if err != nil {
-			return err
-		}
-		app.logger.Info("stopped server", "addr", srv.Addr)
-		return nil
+		err = srv.ListenAndServeTLS(app.config.certFile, app.config.keyFile)
+	} else {
+		app.logger.Info("starting HTTP server", "addr", srv.Addr, "version", app.config.version)
+		err = srv.ListenAndServe()
 	}
 
-	app.logger.Info("starting HTTP server", "addr", srv.Addr, "version", app.config.version)
-
-	err := srv.ListenAndServe()
 	if !errors.Is(err, http.ErrServerClosed) {
 		return err
 	}
+
 	err = <-shutdownError
 	if err != nil {
 		return err
 	}
+
 	app.logger.Info("stopped server", "addr", srv.Addr)
 	return nil
 }
