@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -64,30 +63,9 @@ func main() {
 		httpClient: httpClient,
 	}
 
-	srv := &http.Server{
-		Addr:         fmt.Sprintf(":%d", cfg.port),
-		Handler:      app.routes(),
-		IdleTimeout:  time.Minute,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 30 * time.Second,
-		ErrorLog:     slog.NewLogLogger(logger.Handler(), slog.LevelError),
-	}
-
-	// Check if both cert and key files are provided for HTTPS
-	if cfg.certFile != "" || cfg.keyFile != "" {
-		if cfg.certFile == "" || cfg.keyFile == "" {
-			logger.Error("for HTTPS, both certificate and key files must be provided")
-			os.Exit(1)
-		}
-		logger.Info("starting HTTPS server", "addr", srv.Addr, "version", cfg.version, "cert", cfg.certFile, "key", cfg.keyFile)
-		srvErr := srv.ListenAndServeTLS(cfg.certFile, cfg.keyFile)
-		logger.Error(srvErr.Error())
+	err = app.serve()
+	if err != nil {
+		logger.Error(err.Error())
 		os.Exit(1)
 	}
-
-	logger.Info("starting HTTP server", "addr", srv.Addr, "version", cfg.version)
-
-	srvErr := srv.ListenAndServe()
-	logger.Error(srvErr.Error())
-	os.Exit(1)
 }
