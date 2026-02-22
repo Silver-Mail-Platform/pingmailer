@@ -22,7 +22,7 @@ func (app *application) serve() error {
 		ErrorLog:     slog.NewLogLogger(app.logger.Handler(), slog.LevelError),
 	}
 
-	shutdownError := make(chan error)
+	shutdownError := make(chan error, 1)
 
 	//  background goroutine that catches signals.
 	go func() {
