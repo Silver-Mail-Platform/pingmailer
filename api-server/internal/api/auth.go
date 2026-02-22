@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"encoding/json"
@@ -9,11 +9,6 @@ import (
 	"strings"
 	"time"
 )
-
-// OAuth2Config holds the OAuth2 server configuration
-type OAuth2Config struct {
-	IntrospectURL string
-}
 
 // IntrospectionResponse represents the OAuth2 token introspection response
 type IntrospectionResponse struct {
@@ -45,13 +40,13 @@ func extractBearerToken(r *http.Request) (string, error) {
 }
 
 // validateAccessToken validates the provided access token using OAuth2 token introspection
-func (app *application) validateAccessToken(token string) error {
+func (app *App) validateAccessToken(token string) error {
 	// Create form data with the token
 	data := url.Values{}
 	data.Set("token", token)
 
 	// #nosec G704 -- IntrospectURL is from server configuration, not user input
-	req, err := http.NewRequest("POST", app.config.oauth2.IntrospectURL, strings.NewReader(data.Encode()))
+	req, err := http.NewRequest("POST", app.config.OAuth2.IntrospectURL, strings.NewReader(data.Encode()))
 	if err != nil {
 		return fmt.Errorf("failed to create introspection request: %w", err)
 	}
@@ -98,7 +93,7 @@ func (app *application) validateAccessToken(token string) error {
 }
 
 // authMiddleware validates the Bearer token before allowing access to protected endpoints
-func (app *application) authMiddleware(next http.HandlerFunc) http.HandlerFunc {
+func (app *App) authMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		token, err := extractBearerToken(r)
 		if err != nil {
