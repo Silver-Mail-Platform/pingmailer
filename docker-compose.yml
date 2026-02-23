@@ -98,7 +98,7 @@ services:
     volumes:
       - ./mail-infra/services/silver-config/certbot/keys/etc:/etc/letsencrypt
       - ./mail-infra/services/silver-config/certbot/keys/log:/var/log/letsencrypt
-      - ./mail-infra/services/silver-config/certbot/keys/lib:/var/lib/letsencrypt"
+      - ./mail-infra/services/silver-config/certbot/keys/lib:/var/lib/letsencrypt
     ports:
       - "80:80"
       - "443:443"
