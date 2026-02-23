@@ -13,8 +13,8 @@ NC="\033[0m" # No Color
 
 # Get the script directory (where init.sh is located)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# Services directory contains docker-compose.yaml
-SERVICES_DIR="$(cd "${SCRIPT_DIR}/../../services" && pwd)"
+# Root directory contains docker-compose.yml
+ROOT_DIR="$(cd "${SCRIPT_DIR}/../../../" && pwd)"
 # Conf directory contains config files
 CONF_DIR="$(cd "${SCRIPT_DIR}/../../conf" && pwd)"
 CONFIG_FILE="${CONF_DIR}/silver.yaml"
@@ -93,8 +93,8 @@ fi
 echo -e "\n${YELLOW}Step 3/4: Starting Docker services${NC}"
 
 # Start main Silver mail services
-echo "  - Starting Silver mail services..."
-(cd "${SERVICES_DIR}" && docker compose up -d)
+echo "  - Starting Silver mail services and API Endpoint..."
+(cd "${ROOT_DIR}" && docker compose up -d)
 if [ $? -ne 0 ]; then
 	echo -e "${RED}✗ Docker compose failed. Please check the logs.${NC}"
 	exit 1

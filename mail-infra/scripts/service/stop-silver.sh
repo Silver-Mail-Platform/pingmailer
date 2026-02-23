@@ -2,9 +2,9 @@
 
 # Get the script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# Services directory contains docker-compose.yaml
-SERVICES_DIR="$(cd "${SCRIPT_DIR}/../../services" && pwd)"
+# Root directory contains docker-compose.yml
+ROOT_DIR="$(cd "${SCRIPT_DIR}/../../../" && pwd)"
 
-# Navigate to services directory and stop docker services
-echo "Stopping Silver mail services..."
-(cd "${SERVICES_DIR}" && docker compose down)
+# Navigate to root directory and stop docker services
+echo "Stopping Silver mail services and API Endpoint..."
+(cd "${ROOT_DIR}" && docker compose down)

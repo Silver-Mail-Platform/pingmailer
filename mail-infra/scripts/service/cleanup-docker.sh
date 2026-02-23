@@ -18,8 +18,8 @@ NC="\033[0m" # No Color
 
 # Get the script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# Services directory contains docker-compose.yaml
-SERVICES_DIR="$(cd "${SCRIPT_DIR}/../../services" && pwd)"
+# Root directory contains docker-compose.yml
+ROOT_DIR="$(cd "${SCRIPT_DIR}/../../../" && pwd)"
 
 echo -e "${YELLOW}Docker Complete Cleanup${NC}"
 echo "---------------------------------------------"
@@ -34,8 +34,8 @@ fi
 
 # Step 1: Stop all containers using docker compose
 echo -e "\n${YELLOW}Step 1/3: Stopping Docker containers${NC}"
-echo "  - Stopping Silver mail services..."
-(cd "${SERVICES_DIR}" && docker compose down)
+echo "  - Stopping Silver mail services and API Endpoint..."
+(cd "${ROOT_DIR}" && docker compose down)
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}  ✓ Silver services stopped successfully${NC}"
 else

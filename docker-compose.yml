@@ -1,0 +1,136 @@
+services:
+  smtp-server:
+    image: ghcr.io/lsflk/silver-smtp:main
+    container_name: smtp-server-container
+    ports:
+      - "25:25"
+      - "587:587"
+    volumes:
+      - ./mail-infra/services/silver-config/postfix/main.cf:/etc/postfix/main.cf:ro
+      - ./mail-infra/services/silver-config/postfix/master.cf:/etc/postfix/master.cf:ro
+      - ./mail-infra/services/silver-config/postfix/recipient_access:/etc/postfix/recipient_access:ro
+      - ./mail-infra/conf/silver.yaml:/etc/postfix/silver.yaml
+      - ./mail-infra/services/silver-config/certbot/keys/etc:/etc/letsencrypt:ro
+      - postfix-spool:/var/spool/postfix
+      - postfix-logs:/var/log
+    networks:
+      - mail-network
+    depends_on:
+      - opendkim-server
+      - certbot-server
+      - raven-sasl-server
+
+  raven-sasl-server:
+    image: ghcr.io/lsflk/raven-sasl:latest
+    container_name: raven-sasl
+    ports:
+      - "12345:12345"
+    volumes:
+      - ./mail-infra/services/silver-config/raven/conf:/etc/raven:rw
+      - ./mail-infra/services/silver-config/raven/certs:/certs:ro
+      - postfix-spool:/var/spool/postfix
+    environment:
+      - DB_FILE=/app/data/databases/shared.db
+    networks:
+      - mail-network
+    restart: unless-stopped
+    user: "0:0"
+
+  opendkim-server:
+    image: ghcr.io/lsflk/silver-dkim:main
+    container_name: opendkim-server
+    volumes:
+      - ./mail-infra/conf/silver.yaml:/etc/opendkim/silver.yaml
+      - ./mail-infra/services/silver-config/opendkim/opendkim.conf:/etc/opendkim/opendkim.conf:ro
+      - ./mail-infra/services/silver-config/opendkim/KeyTable:/etc/opendkim/KeyTable:ro
+      - ./mail-infra/services/silver-config/opendkim/SigningTable:/etc/opendkim/SigningTable:ro
+      - ./mail-infra/services/silver-config/opendkim/TrustedHosts:/etc/opendkim/TrustedHosts:ro
+      - dkim-keys:/etc/dkimkeys
+    networks:
+      - mail-network
+    cap_drop:
+      - all
+    security_opt:
+      - no-new-privileges:true
+
+  thunder-db-init:
+    image: ghcr.io/asgardeo/thunder:0.22.0
+    container_name: thunder-db-init
+    command: sh -c "cp -r /opt/thunder/repository/database/* /data/"
+    volumes:
+      - thunder-db:/data
+    restart: "no"
+
+  thunder-setup:
+    image: ghcr.io/asgardeo/thunder:0.22.0
+    container_name: thunder-setup
+    command: ./setup.sh
+    volumes:
+      - thunder-db:/opt/thunder/repository/database
+      - ./mail-infra/services/silver-config/thunder/deployment.yaml:/opt/thunder/repository/conf/deployment.yaml:ro
+    depends_on:
+      thunder-db-init:
+        condition: service_completed_successfully
+    restart: "no"
+
+  thunder:
+    image: ghcr.io/asgardeo/thunder:0.22.0
+    container_name: thunder-server
+    depends_on:
+      thunder-setup:
+        condition: service_completed_successfully
+    ports:
+      - "8090:8090"
+    volumes:
+      - thunder-db:/opt/thunder/repository/database
+      - ./mail-infra/services/silver-config/thunder/certs/server.cert:/opt/thunder/repository/resources/security/server.cert:ro
+      - ./mail-infra/services/silver-config/thunder/certs/server.key:/opt/thunder/repository/resources/security/server.key:ro
+      - ./mail-infra/services/silver-config/thunder/deployment.yaml:/opt/thunder/repository/conf/deployment.yaml:ro
+      - ./mail-infra/services/silver-config/thunder/develop-config.js:/opt/thunder/apps/develop/config.js:ro
+      - ./mail-infra/services/silver-config/thunder/gate-config.js:/opt/thunder/apps/gate/config.js:ro
+    networks:
+      - mail-network
+    restart: unless-stopped
+
+  certbot-server:
+    image: ghcr.io/lsflk/silver-certbot:main
+    container_name: certbot-server
+    volumes:
+      - ./mail-infra/services/silver-config/certbot/keys/etc:/etc/letsencrypt
+      - ./mail-infra/services/silver-config/certbot/keys/log:/var/log/letsencrypt
+      - ./mail-infra/services/silver-config/certbot/keys/lib:/var/lib/letsencrypt
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - mail-network
+
+  api-server:
+    build:
+      context: ./api-server
+      dockerfile: Dockerfile
+    container_name: pingmailer-api-server
+    restart: unless-stopped
+    ports:
+      - "8443:8443"
+    environment:
+      - PORT=8443
+      - CERT_FILE=/certs/live/${DOMAIN}/fullchain.pem
+      - KEY_FILE=/certs/live/${DOMAIN}/privkey.pem
+      - OAUTH2_INTROSPECT_URL=${OAUTH2_INTROSPECT_URL}
+    volumes:
+      - ${CERT_PATH}:/certs:ro
+    networks:
+      - mail-network
+    depends_on:
+      - smtp-server
+
+volumes:
+  postfix-spool:
+  postfix-logs:
+  dkim-keys:
+  thunder-db:
+
+networks:
+  mail-network:
+    name: mail-network
