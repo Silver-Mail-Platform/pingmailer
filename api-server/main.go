@@ -39,10 +39,10 @@ func main() {
 			logger.Error("invalid OAuth2 introspection URL", "error", err)
 			os.Exit(1)
 		}
-		if introspectURL.Scheme != "http" && introspectURL.Scheme != "https" {
-			logger.Error("OAuth2 introspection URL must use http or https scheme")
-			os.Exit(1)
-		}
+        if introspectURL.Scheme != "https" {
+            logger.Error("OAuth2 introspection URL must use https scheme")
+            os.Exit(1)
+        }
 	}
 
 	// Create a shared HTTP client for token introspection.
