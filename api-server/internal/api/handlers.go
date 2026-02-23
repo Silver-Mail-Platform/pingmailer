@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"encoding/json"
@@ -9,12 +9,12 @@ import (
 )
 
 // handleHealth provides a simple health check endpoint
-func (app *application) handleHealth(w http.ResponseWriter, r *http.Request) {
+func (app *App) handleHealth(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(map[string]string{
 		"status":  "ok",
-		"version": app.config.version,
+		"version": app.config.Version,
 	}); err != nil {
 		app.logger.Error("failed to encode health response", "error", err)
 	}
@@ -39,7 +39,7 @@ type notifyRequest struct {
 	TemplateData   map[string]any `json:"template_data,omitempty"` // Optional: custom template data
 }
 
-func (app *application) handleNotify(w http.ResponseWriter, r *http.Request) {
+func (app *App) handleNotify(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.Header().Set("Allow", http.MethodPost)
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
