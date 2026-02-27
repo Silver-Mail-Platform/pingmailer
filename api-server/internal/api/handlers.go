@@ -9,7 +9,7 @@ import (
 )
 
 // handleHealth provides a simple health check endpoint
-func (app *App) handleHealth(w http.ResponseWriter, r *http.Request) {
+func (app *App) handleHealthCheck(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(map[string]string{

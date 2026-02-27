@@ -14,7 +14,7 @@ func (app *App) routes() http.Handler {
 	}
 
 	// Health check endpoint (unprotected)
-	mux.HandleFunc("/health", app.handleHealth)
+	mux.HandleFunc("/healthcheck", app.handleHealthCheck)
 
 	return mux
 }
