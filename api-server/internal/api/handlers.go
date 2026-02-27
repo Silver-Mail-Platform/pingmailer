@@ -63,14 +63,13 @@ func (app *App) handleNotify(w http.ResponseWriter, r *http.Request) {
 
 	defaultUser := buildDefaultUser(req)
 
-	// send email in a goroutine
-	go func(req notifyRequest, defaultUser user, mailer emailer.Mailer) {
+	app.background(func() {
 		if err := sendNotifyEmail(mailer, req, defaultUser); err != nil {
 			app.logger.Error("failed to send email", "error", err)
 		} else {
 			app.logger.Info("email sent successfully", "recipient", req.RecipientEmail)
 		}
-	}(req, defaultUser, mailer)
+	})
 
 	// Send 202 Accepted response
 	w.Header().Set("Content-Type", "application/json")
