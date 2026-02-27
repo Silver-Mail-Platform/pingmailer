@@ -34,13 +34,14 @@ func (app *App) Serve() error {
 		defer cancel()
 
 		err := srv.Shutdown(ctx)
+
 		if err != nil {
 			shutdownError <- err
+		} else {
+			app.logger.Info("completing background tasks", "addr", srv.Addr)
+			app.wg.Wait()
+			shutdownError <- nil
 		}
-
-		app.logger.Info("completing background tasks", "addr", srv.Addr)
-		app.wg.Wait()
-		shutdownError <- nil
 	}()
 
 	var err error

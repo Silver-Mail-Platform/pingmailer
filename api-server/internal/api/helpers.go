@@ -1,7 +1,5 @@
 package api
 
-import "fmt"
-
 func (app *App) background(fn func()) {
 	app.wg.Add(1)
 	// Launch a background goroutine.
@@ -11,7 +9,7 @@ func (app *App) background(fn func()) {
 		// Recover any panic.
 		defer func() {
 			if err := recover(); err != nil {
-				app.logger.Error(fmt.Sprintf("%v", err))
+				app.logger.Error("recovered from panic", "error", err)
 			}
 		}()
 		// Execute the arbitrary function that we passed as the parameter.
