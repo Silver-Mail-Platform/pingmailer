@@ -63,6 +63,7 @@ func (app *App) handleNotify(w http.ResponseWriter, r *http.Request) {
 
 	defaultUser := buildDefaultUser(req)
 
+	// send email in a goroutine
 	go func(req notifyRequest, defaultUser user, mailer emailer.Mailer) {
 		if err := sendNotifyEmail(mailer, req, defaultUser); err != nil {
 			app.logger.Error("failed to send email", "error", err)
@@ -71,9 +72,9 @@ func (app *App) handleNotify(w http.ResponseWriter, r *http.Request) {
 		}
 	}(req, defaultUser, mailer)
 
-	// Send success response
+	// Send 202 Accepted response
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusAccepted)
 	if err := json.NewEncoder(w).Encode(map[string]string{
 		"message": "Email queued successfully",
 		"status":  "ok",

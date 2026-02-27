@@ -7,6 +7,9 @@ CERT_DIR ?= $(PWD)/../mail-infra/services/silver-config/certbot/keys/etc
 run:
 	go run .
 
+dev:
+	go run . -dev
+
 run-https:
 	go run . -port 8443 -cert $(CERT_DIR)/live/$(DOMAIN)/fullchain.pem -key $(CERT_DIR)/live/$(DOMAIN)/privkey.pem
 
