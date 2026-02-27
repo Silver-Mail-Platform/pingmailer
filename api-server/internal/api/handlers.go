@@ -9,7 +9,7 @@ import (
 )
 
 // handleHealth provides a simple health check endpoint
-func (app *App) handleHealth(w http.ResponseWriter, r *http.Request) {
+func (app *App) handleHealthCheck(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(map[string]string{
@@ -63,17 +63,17 @@ func (app *App) handleNotify(w http.ResponseWriter, r *http.Request) {
 
 	defaultUser := buildDefaultUser(req)
 
-	go func(req notifyRequest, defaultUser user, mailer emailer.Mailer) {
+	app.background(func() {
 		if err := sendNotifyEmail(mailer, req, defaultUser); err != nil {
 			app.logger.Error("failed to send email", "error", err)
 		} else {
 			app.logger.Info("email sent successfully", "recipient", req.RecipientEmail)
 		}
-	}(req, defaultUser, mailer)
+	})
 
-	// Send success response
+	// Send 202 Accepted response
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusAccepted)
 	if err := json.NewEncoder(w).Encode(map[string]string{
 		"message": "Email queued successfully",
 		"status":  "ok",

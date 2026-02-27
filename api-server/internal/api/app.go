@@ -3,6 +3,7 @@ package api
 import (
 	"log/slog"
 	"net/http"
+	"sync"
 )
 
 // Config holds API server configuration.
@@ -25,6 +26,7 @@ type App struct {
 	config     Config
 	logger     *slog.Logger
 	httpClient *http.Client
+	wg         sync.WaitGroup
 }
 
 // New builds an App with injected dependencies.
