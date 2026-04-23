@@ -11,6 +11,8 @@ services:
       - ./mail-infra/services/silver-config/postfix/recipient_access:/etc/postfix/recipient_access:ro
       - ./mail-infra/conf/silver.yaml:/etc/postfix/silver.yaml
       - ./mail-infra/services/silver-config/certbot/keys/etc:/etc/letsencrypt:ro
+      - postfix-spool:/var/spool/postfix
+      - postfix-logs:/var/log
     networks:
       - mail-network
     depends_on:
@@ -126,6 +128,8 @@ services:
       - smtp-server
 
 volumes:
+  postfix-spool:
+  postfix-logs:
   dkim-keys:
   thunder-db:
   consent-db:
