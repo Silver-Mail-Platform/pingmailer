@@ -31,6 +31,8 @@ mkdir -p "${RAVEN_CERT_PATH}"
 cat >"$OUTPUT_FILE" <<EOF
 domain: ${MAIL_DOMAIN}
 auth_server_url: https://thunder-server:8090/auth/credentials/authenticate
+
+sasl_scope: "tcp_only"
 EOF
 
 echo "✅ Generated: $OUTPUT_FILE (domain: ${MAIL_DOMAIN})"

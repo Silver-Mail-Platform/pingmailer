@@ -1,7 +1,7 @@
 window.__THUNDER_RUNTIME_CONFIG__ = {
   client: {
-    base: '/develop',
-    client_id: 'DEVELOP',
+    base: '/console',
+    client_id: 'CONSOLE',
     scopes: ['openid', 'profile', 'email', 'system'],
   },
   server: {
