@@ -25,12 +25,12 @@ type Mailer struct {
 }
 
 // NewMailer returns a Mailer configured for SMTP auth. When accessToken is
-// provided, it uses XOAUTH2 with the SMTP username embedded as an encoded
+// provided, it uses XOAUTH2 with the SMTP sender embedded as an encoded
 // user identifier in the auth payload.
-func NewMailer(host string, port int, username, sender, accessToken string) Mailer {
+func NewMailer(host string, port int, _ string, sender, accessToken string) Mailer {
 	dialer := mail.NewDialer(host, port, "", "")
 	dialer.Auth = &xoauth2Auth{
-		username: username,
+		username: sender,
 		token:    accessToken,
 	}
 	dialer.Timeout = 2 * time.Second
