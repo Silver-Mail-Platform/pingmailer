@@ -3,7 +3,11 @@ package emailer
 import (
 	"bytes"
 	"embed"
+	"encoding/base64"
+	"errors"
+	"fmt"
 	"html/template"
+	"net/smtp"
 	"time"
 
 	"github.com/go-mail/mail/v2"
@@ -20,15 +24,44 @@ type Mailer struct {
 	sender string
 }
 
-// New returns a new Mailer instance configured with the provided SMTP settings
-// and a default 2-second connection timeout.
-func NewMailer(host string, port int, username, password, sender string) Mailer {
-	dialer := mail.NewDialer(host, port, username, password)
+// NewMailer returns a Mailer configured for SMTP auth. When accessToken is
+// provided, it uses XOAUTH2 with the SMTP username embedded as an encoded
+// user identifier in the auth payload.
+func NewMailer(host string, port int, username, sender, accessToken string) Mailer {
+	dialer := mail.NewDialer(host, port, "", "")
+	dialer.Auth = &xoauth2Auth{
+		username: username,
+		token:    accessToken,
+	}
 	dialer.Timeout = 2 * time.Second
+
 	return Mailer{
 		dialer: dialer,
 		sender: sender,
 	}
+}
+
+type xoauth2Auth struct {
+	username string
+	token    string
+}
+
+func (a *xoauth2Auth) Start(server *smtp.ServerInfo) (string, []byte, error) {
+	if !server.TLS {
+		return "", nil, errors.New("xoauth2 requires TLS")
+	}
+
+	encodedUser := base64.RawStdEncoding.EncodeToString([]byte(a.username))
+	initialResponse := fmt.Sprintf("user=%s\x01auth=Bearer %s\x01\x01", encodedUser, a.token)
+
+	return "XOAUTH2", []byte(initialResponse), nil
+}
+
+func (a *xoauth2Auth) Next(_ []byte, more bool) ([]byte, error) {
+	if more {
+		return nil, errors.New("unexpected server challenge during XOAUTH2 authentication")
+	}
+	return nil, nil
 }
 
 // Send renders the specified template with the provided data and delivers

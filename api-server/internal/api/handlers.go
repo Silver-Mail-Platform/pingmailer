@@ -30,7 +30,6 @@ type notifyRequest struct {
 	SMTPHost       string         `json:"smtp_host"`
 	SMTPPort       int            `json:"smtp_port"`
 	SMTPUsername   string         `json:"smtp_username"`
-	SMTPPassword   string         `json:"smtp_password"`
 	SMTPSender     string         `json:"smtp_sender"`
 	RecipientName  string         `json:"recipient_name"`
 	RecipientEmail string         `json:"recipient_email"`
@@ -58,8 +57,14 @@ func (app *App) handleNotify(w http.ResponseWriter, r *http.Request) {
 	}
 	applyNotifyDefaults(&req)
 
+	accessToken, _ := accessTokenFromContext(r.Context())
+	if accessToken == "" {
+		http.Error(w, "Unauthorized: missing access token", http.StatusUnauthorized)
+		return
+	}
+
 	// Create a new mailer instance with the provided SMTP configuration
-	mailer := emailer.NewMailer(req.SMTPHost, req.SMTPPort, req.SMTPUsername, req.SMTPPassword, req.SMTPSender)
+	mailer := emailer.NewMailer(req.SMTPHost, req.SMTPPort, req.SMTPUsername, req.SMTPSender, accessToken)
 
 	defaultUser := buildDefaultUser(req)
 
@@ -103,9 +108,6 @@ func validateNotifyRequest(w http.ResponseWriter, req notifyRequest) bool {
 		return false
 	}
 	if !required(req.SMTPUsername != "", "Missing required field: smtp_username") {
-		return false
-	}
-	if !required(req.SMTPPassword != "", "Missing required field: smtp_password") {
 		return false
 	}
 	if !required(req.SMTPSender != "", "Missing required field: smtp_sender") {
