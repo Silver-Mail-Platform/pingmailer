@@ -3,7 +3,6 @@ package emailer
 import (
 	"bytes"
 	"embed"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"html/template"
@@ -25,8 +24,8 @@ type Mailer struct {
 }
 
 // NewMailer returns a Mailer configured for SMTP auth. When accessToken is
-// provided, it uses XOAUTH2 with the SMTP sender embedded as an encoded
-// user identifier in the auth payload.
+// provided, it uses XOAUTH2 with the SMTP sender as the user identifier in
+// the auth payload.
 func NewMailer(host string, port int, _ string, sender, accessToken string) Mailer {
 	dialer := mail.NewDialer(host, port, "", "")
 	dialer.Auth = &xoauth2Auth{
@@ -51,8 +50,7 @@ func (a *xoauth2Auth) Start(server *smtp.ServerInfo) (string, []byte, error) {
 		return "", nil, errors.New("xoauth2 requires TLS")
 	}
 
-	encodedUser := base64.RawStdEncoding.EncodeToString([]byte(a.username))
-	initialResponse := fmt.Sprintf("user=%s\x01auth=Bearer %s\x01\x01", encodedUser, a.token)
+	initialResponse := fmt.Sprintf("user=%s\x01auth=Bearer %s\x01\x01", a.username, a.token)
 
 	return "XOAUTH2", []byte(initialResponse), nil
 }
