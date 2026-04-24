@@ -115,56 +115,6 @@ fi
 sleep 1 # Additional wait after Postfix reload
 
 # ================================
-# Step 4: Initialize Thunder User Schema
-# ================================
-
-THUNDER_HOST=${MAIL_DOMAIN}
-THUNDER_PORT=8090
-
-echo -e "\n${YELLOW}Step 4/4: Creating default user schema in Thunder${NC}"
-
-# Source Thunder authentication utility
-source "${SCRIPT_DIR}/../utils/thunder-auth.sh"
-
-# Step 4.1 & 4.2: Authenticate with Thunder
-if ! thunder_authenticate "$THUNDER_HOST" "$THUNDER_PORT"; then
-	exit 1
-fi
-
-# Step 4.3: Create organization unit
-if ! thunder_create_org_unit "$THUNDER_HOST" "$THUNDER_PORT" "$BEARER_TOKEN" "silver" "Silver Mail" "Organization Unit for Silver Mail"; then
-	exit 1
-fi
-
-# Step 4.4: Create user schema
-echo "  - Creating user schema..."
-SCHEMA_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
-	"https://${THUNDER_HOST}:${THUNDER_PORT}/user-schemas" \
-	-H "Content-Type: application/json" \
-	-H "Accept: application/json" \
-	-H "Authorization: Bearer ${BEARER_TOKEN}" \
-	-d "{
-    \"name\": \"emailuser\",
-    \"ouId\": \"${ORG_UNIT_ID}\",
-    \"schema\": {
-      \"username\": { \"type\": \"string\", \"unique\": true },
-      \"password\": { \"type\": \"string\" },
-      \"email\": { \"type\": \"string\", \"unique\": true }
-    }
-  }")
-
-SCHEMA_BODY=$(echo "$SCHEMA_RESPONSE" | head -n -1)
-SCHEMA_STATUS=$(echo "$SCHEMA_RESPONSE" | tail -n1)
-
-if [ "$SCHEMA_STATUS" -eq 201 ] || [ "$SCHEMA_STATUS" -eq 200 ]; then
-	echo -e "${GREEN}  ✓ User schema 'emailuser' created successfully (HTTP $SCHEMA_STATUS)${NC}"
-else
-	echo -e "${RED}✗ Failed to create user schema (HTTP $SCHEMA_STATUS)${NC}"
-	echo "Response: $SCHEMA_BODY"
-	exit 1
-fi
-
-# ================================
 # Public DKIM Key Instructions
 # ================================
 chmod +x "${SCRIPT_DIR}/../utils/get-dkim.sh"

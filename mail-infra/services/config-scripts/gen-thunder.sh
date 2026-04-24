@@ -33,21 +33,12 @@ if [[ -f "${THUNDER_DEPLOYMENT_FILE}" ]]; then
     
     # Create a temporary file for editing
     cp "${THUNDER_DEPLOYMENT_FILE}" "${THUNDER_DEPLOYMENT_FILE}.bak"
-    
-    # Update server.public_url
-    sed -i'' -e "/^server:/,/^[^ ]/ s|public_url:.*|public_url: \"https://${MAIL_DOMAIN}:${THUNDER_PORT}\"|" "${THUNDER_DEPLOYMENT_FILE}"
-    
-    # Update gate_client.hostname
-    sed -i'' -e "/^gate_client:/,/^[^ ]/ s|hostname:.*|hostname: \"${MAIL_DOMAIN}\"|" "${THUNDER_DEPLOYMENT_FILE}"
-    
-    # Update gate_client.port (if needed)
-    sed -i'' -e "/^gate_client:/,/^[^ ]/ s|port:.*|port: ${THUNDER_PORT}|" "${THUNDER_DEPLOYMENT_FILE}"
-    
-    # Update cors.allowed_origins - replace any https://domain:port pattern
-    sed -i'' -e "/^cors:/,/^[^ ]/ s|https://[^:\"]*:[0-9]*|https://${MAIL_DOMAIN}:${THUNDER_PORT}|g" "${THUNDER_DEPLOYMENT_FILE}"
-    
-    # Update passkey.allowed_origins - replace any https://domain:port pattern
-    sed -i'' -e "/^passkey:/,/^[^ ]/ s|https://[^:\"]*:[0-9]*|https://${MAIL_DOMAIN}:${THUNDER_PORT}|g" "${THUNDER_DEPLOYMENT_FILE}"
+
+    # Replace template placeholders directly so all Thunder fields update together.
+    sed -i '' \
+        -e "s|<domain_name>|${MAIL_DOMAIN}|g" \
+        -e "s|<port>|${THUNDER_PORT}|g" \
+        "${THUNDER_DEPLOYMENT_FILE}"
     
     # Remove backup file
     rm -f "${THUNDER_DEPLOYMENT_FILE}.bak"
@@ -61,8 +52,10 @@ fi
 if [[ -f "${THUNDER_CONSOLE_CONFIG}" ]]; then
     echo -e "Updating Thunder console-config.js..."
     
-    # Update public_url in console-config.js
-    sed -i'' -e "s|public_url: 'https://[^']*'|public_url: 'https://${MAIL_DOMAIN}:${THUNDER_PORT}'|g" "${THUNDER_CONSOLE_CONFIG}"
+    sed -i '' \
+        -e "s|<domain_name>|${MAIL_DOMAIN}|g" \
+        -e "s|<port>|${THUNDER_PORT}|g" \
+        "${THUNDER_CONSOLE_CONFIG}"
     
     echo -e "Thunder console-config.js updated"
 else
@@ -73,8 +66,10 @@ fi
 if [[ -f "${THUNDER_GATE_CONFIG}" ]]; then
     echo -e "Updating Thunder gate-config.js..."
     
-    # Update public_url in gate-config.js
-    sed -i'' -e "s|public_url: 'https://[^']*'|public_url: 'https://${MAIL_DOMAIN}:${THUNDER_PORT}'|g" "${THUNDER_GATE_CONFIG}"
+    sed -i '' \
+        -e "s|<domain_name>|${MAIL_DOMAIN}|g" \
+        -e "s|<port>|${THUNDER_PORT}|g" \
+        "${THUNDER_GATE_CONFIG}"
     
     echo -e "Thunder gate-config.js updated"
 else
