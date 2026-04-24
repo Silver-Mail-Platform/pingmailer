@@ -11,7 +11,7 @@ readonly MAIL_DOMAIN=$(grep -m 1 '^\s*-\s*domain:' "${ROOT_DIR}/../conf/silver.y
 readonly LETSENCRYPT_PATH="${ROOT_DIR}/silver-config/certbot/keys/etc/live/${MAIL_DOMAIN}"
 readonly THUNDER_CERTS_PATH="${ROOT_DIR}/silver-config/thunder/certs"
 readonly THUNDER_DEPLOYMENT_FILE="${ROOT_DIR}/silver-config/thunder/deployment.yaml"
-readonly THUNDER_DEVELOP_CONFIG="${ROOT_DIR}/silver-config/thunder/develop-config.js"
+readonly THUNDER_CONSOLE_CONFIG="${ROOT_DIR}/silver-config/thunder/console-config.js"
 readonly THUNDER_GATE_CONFIG="${ROOT_DIR}/silver-config/thunder/gate-config.js"
 readonly THUNDER_PORT="8090"
 
@@ -33,21 +33,12 @@ if [[ -f "${THUNDER_DEPLOYMENT_FILE}" ]]; then
     
     # Create a temporary file for editing
     cp "${THUNDER_DEPLOYMENT_FILE}" "${THUNDER_DEPLOYMENT_FILE}.bak"
-    
-    # Update server.public_url
-    sed -i'' -e "/^server:/,/^[^ ]/ s|public_url:.*|public_url: \"https://${MAIL_DOMAIN}:${THUNDER_PORT}\"|" "${THUNDER_DEPLOYMENT_FILE}"
-    
-    # Update gate_client.hostname
-    sed -i'' -e "/^gate_client:/,/^[^ ]/ s|hostname:.*|hostname: \"${MAIL_DOMAIN}\"|" "${THUNDER_DEPLOYMENT_FILE}"
-    
-    # Update gate_client.port (if needed)
-    sed -i'' -e "/^gate_client:/,/^[^ ]/ s|port:.*|port: ${THUNDER_PORT}|" "${THUNDER_DEPLOYMENT_FILE}"
-    
-    # Update cors.allowed_origins - replace any https://domain:port pattern
-    sed -i'' -e "/^cors:/,/^[^ ]/ s|https://[^:\"]*:[0-9]*|https://${MAIL_DOMAIN}:${THUNDER_PORT}|g" "${THUNDER_DEPLOYMENT_FILE}"
-    
-    # Update passkey.allowed_origins - replace any https://domain:port pattern
-    sed -i'' -e "/^passkey:/,/^[^ ]/ s|https://[^:\"]*:[0-9]*|https://${MAIL_DOMAIN}:${THUNDER_PORT}|g" "${THUNDER_DEPLOYMENT_FILE}"
+
+    # Replace template placeholders directly so all Thunder fields update together.
+    sed -i '' \
+        -e "s|<domain_name>|${MAIL_DOMAIN}|g" \
+        -e "s|<port>|${THUNDER_PORT}|g" \
+        "${THUNDER_DEPLOYMENT_FILE}"
     
     # Remove backup file
     rm -f "${THUNDER_DEPLOYMENT_FILE}.bak"
@@ -57,24 +48,28 @@ else
     echo -e "Warning: Thunder deployment.yaml not found at ${THUNDER_DEPLOYMENT_FILE}"
 fi
 
-# Update develop-config.js with correct domain and port
-if [[ -f "${THUNDER_DEVELOP_CONFIG}" ]]; then
-    echo -e "Updating Thunder develop-config.js..."
+# Update console-config.js with correct domain and port
+if [[ -f "${THUNDER_CONSOLE_CONFIG}" ]]; then
+    echo -e "Updating Thunder console-config.js..."
     
-    # Update public_url in develop-config.js
-    sed -i'' -e "s|public_url: 'https://[^']*'|public_url: 'https://${MAIL_DOMAIN}:${THUNDER_PORT}'|g" "${THUNDER_DEVELOP_CONFIG}"
+    sed -i '' \
+        -e "s|<domain_name>|${MAIL_DOMAIN}|g" \
+        -e "s|<port>|${THUNDER_PORT}|g" \
+        "${THUNDER_CONSOLE_CONFIG}"
     
-    echo -e "Thunder develop-config.js updated"
+    echo -e "Thunder console-config.js updated"
 else
-    echo -e "Warning: develop-config.js not found at ${THUNDER_DEVELOP_CONFIG}"
+    echo -e "Warning: console-config.js not found at ${THUNDER_CONSOLE_CONFIG}"
 fi
 
 # Update gate-config.js with correct domain and port
 if [[ -f "${THUNDER_GATE_CONFIG}" ]]; then
     echo -e "Updating Thunder gate-config.js..."
     
-    # Update public_url in gate-config.js
-    sed -i'' -e "s|public_url: 'https://[^']*'|public_url: 'https://${MAIL_DOMAIN}:${THUNDER_PORT}'|g" "${THUNDER_GATE_CONFIG}"
+    sed -i '' \
+        -e "s|<domain_name>|${MAIL_DOMAIN}|g" \
+        -e "s|<port>|${THUNDER_PORT}|g" \
+        "${THUNDER_GATE_CONFIG}"
     
     echo -e "Thunder gate-config.js updated"
 else

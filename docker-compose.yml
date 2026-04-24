@@ -28,13 +28,12 @@ services:
     volumes:
       - ./mail-infra/services/silver-config/raven/conf:/etc/raven:rw
       - ./mail-infra/services/silver-config/raven/certs:/certs:ro
-      - postfix-spool:/var/spool/postfix
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
       - DB_FILE=/app/data/databases/shared.db
     networks:
       - mail-network
     restart: unless-stopped
-    user: "0:0"
 
   opendkim-server:
     image: ghcr.io/lsflk/silver-dkim:main
@@ -54,19 +53,21 @@ services:
       - no-new-privileges:true
 
   thunder-db-init:
-    image: ghcr.io/asgardeo/thunder:0.22.0
+    image: ghcr.io/asgardeo/thunder:0.32.0
     container_name: thunder-db-init
-    command: sh -c "cp -r /opt/thunder/repository/database/* /data/"
+    command: sh -c "cp -r /opt/thunder/repository/database/* /data/ && (cp -r /opt/thunder/consent/repository/database/* /consent-data/ 2>/dev/null || true)"
     volumes:
       - thunder-db:/data
+      - consent-db:/consent-data
     restart: "no"
 
   thunder-setup:
-    image: ghcr.io/asgardeo/thunder:0.22.0
+    image: ghcr.io/asgardeo/thunder:0.32.0
     container_name: thunder-setup
     command: ./setup.sh
     volumes:
       - thunder-db:/opt/thunder/repository/database
+      - consent-db:/opt/thunder/consent/repository/database
       - ./mail-infra/services/silver-config/thunder/deployment.yaml:/opt/thunder/repository/conf/deployment.yaml:ro
     depends_on:
       thunder-db-init:
@@ -74,7 +75,7 @@ services:
     restart: "no"
 
   thunder:
-    image: ghcr.io/asgardeo/thunder:0.22.0
+    image: ghcr.io/asgardeo/thunder:0.32.0
     container_name: thunder-server
     depends_on:
       thunder-setup:
@@ -83,10 +84,11 @@ services:
       - "8090:8090"
     volumes:
       - thunder-db:/opt/thunder/repository/database
+      - consent-db:/opt/thunder/consent/repository/database
       - ./mail-infra/services/silver-config/thunder/certs/server.cert:/opt/thunder/repository/resources/security/server.cert:ro
       - ./mail-infra/services/silver-config/thunder/certs/server.key:/opt/thunder/repository/resources/security/server.key:ro
       - ./mail-infra/services/silver-config/thunder/deployment.yaml:/opt/thunder/repository/conf/deployment.yaml:ro
-      - ./mail-infra/services/silver-config/thunder/develop-config.js:/opt/thunder/apps/develop/config.js:ro
+      - ./mail-infra/services/silver-config/thunder/console-config.js:/opt/thunder/apps/console/config.js:ro
       - ./mail-infra/services/silver-config/thunder/gate-config.js:/opt/thunder/apps/gate/config.js:ro
     networks:
       - mail-network
@@ -130,6 +132,7 @@ volumes:
   postfix-logs:
   dkim-keys:
   thunder-db:
+  consent-db:
 
 networks:
   mail-network:
