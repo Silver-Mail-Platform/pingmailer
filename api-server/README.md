@@ -151,11 +151,8 @@ curl -X POST https://your-domain:8443/notify \
 ### Running Locally
 
 ```bash
-# Run with HTTP (default port 8080)
+# Run with HTTPS (requires valid cert/key files)
 make run
-
-# Run with HTTPS
-make run-https DOMAIN=yourdomain.com
 
 # Build binary
 make build
@@ -166,9 +163,6 @@ make build
 ```bash
 # Build image
 make docker-build
-
-# Run with HTTP
-make docker-run
 
 # Run with HTTPS
 make docker-run-https DOMAIN=yourdomain.com

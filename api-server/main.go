@@ -12,8 +12,7 @@ import (
 
 func main() {
 	var cfg api.Config
-	flag.IntVar(&cfg.Port, "port", 8080, "API server port")
-	flag.BoolVar(&cfg.Dev, "dev", false, "Development mode: bypass OAuth token validation")
+	flag.IntVar(&cfg.Port, "port", 8443, "API server HTTPS port")
 	flag.StringVar(&cfg.Version, "version", "0.1.0", "Version")
 	flag.StringVar(&cfg.CertFile, "cert", "", "Path to TLS certificate file (e.g., /path/to/fullchain.pem)")
 	flag.StringVar(&cfg.KeyFile, "key", "", "Path to TLS key file (e.g., /path/to/privkey.pem)")
@@ -21,10 +20,6 @@ func main() {
 	flag.Parse()
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
-
-	if cfg.Dev {
-		logger.Warn("dev mode enabled: authorization middleware is bypassed")
-	}
 
 	// Keep a shared HTTP client for future integrations.
 	httpClient := &http.Client{
