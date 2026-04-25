@@ -68,7 +68,12 @@
        "smtp_port": 587,
        "smtp_username": "your_smtp_username",
        "smtp_sender": "sender@example.com",
-       "recipient_email": "user@example.com"
+          "recipients": [
+             {
+                "email": "user@example.com",
+                "name": "User"
+             }
+          ]
      }'
     ```
 

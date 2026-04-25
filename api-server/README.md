@@ -40,8 +40,16 @@ curl -X POST https://your-domain:8443/notify \
     "smtp_port": 587,
     "smtp_username": "user@yourdomain.com",
     "smtp_sender": "noreply@yourdomain.com",
-    "recipient_email": "recipient@example.com",
-    "recipient_name": "John Doe",
+    "recipients": [
+      {
+        "email": "recipient1@example.com",
+        "name": "John Doe"
+      },
+      {
+        "email": "recipient2@example.com",
+        "name": "Jane Doe"
+      }
+    ],
     "app_name": "MyApp"
   }'
 ```
@@ -54,7 +62,7 @@ curl -X POST https://your-domain:8443/notify \
 | `smtp_port` | integer | SMTP server port (587 for TLS) |
 | `smtp_username` | string | SMTP authentication username |
 | `smtp_sender` | string | Sender email address |
-| `recipient_email` | string | Recipient's email address |
+| `recipients` or `recipient_email` | array or string | Recipient list or a single recipient email (legacy) |
 
 The request must include an `Authorization: Bearer <access-token>` header. The
 API forwards this token to SMTP using XOAUTH2 and does not validate it locally.
@@ -64,6 +72,7 @@ API forwards this token to SMTP using XOAUTH2 and does not validate it locally.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `recipient_name` | string | "User" | Recipient's name |
+| `recipients` | array | - | List of recipients: `{ "email": "...", "name": "..." }` |
 | `app_name` | string | "Application" | Application name for email template |
 | `template` | string | - | Custom email template |
 | `template_data` | object | - | Data for custom template |
@@ -106,7 +115,12 @@ curl -X POST https://your-domain:8443/notify \
     "smtp_port": 587,
     "smtp_username": "user@domain.com",
     "smtp_sender": "noreply@domain.com",
-    "recipient_email": "user@example.com",
+    "recipients": [
+      {
+        "email": "user@example.com",
+        "name": "John"
+      }
+    ],
     "template": "{{define \"subject\"}}Password Reset{{end}}{{define \"plainBody\"}}Hi {{.Name}}, your code is {{.Code}}{{end}}{{define \"htmlBody\"}}<p>Hi {{.Name}}, your code is <strong>{{.Code}}</strong></p>{{end}}",
     "template_data": {
       "Name": "John",
